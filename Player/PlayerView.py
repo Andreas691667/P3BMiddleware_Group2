@@ -1,4 +1,4 @@
-import turtle
+# import turtle
 
 from PlayerModel import PlayerModel
 
@@ -7,3 +7,4 @@ class PlayerView():
 
     def __init__(self) -> None:
         self.model = PlayerModel()
+

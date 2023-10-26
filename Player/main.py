@@ -1,9 +1,7 @@
 from PlayerView import PlayerView
 
-def main():
-    """Main function"""
+if __name__ == "__main__":
     view = PlayerView()
 
     while True:
-        print('hello')
         view.model.sc.update()
