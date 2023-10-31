@@ -5,6 +5,7 @@ from client import Client
 from view import View
 from model import Model
 import keyboard
+import Utility.message_parsing as message_parsing
 
 
 class Game():
@@ -32,14 +33,18 @@ class Game():
 
     def start_game(self):
         """Start the game loop"""
-        
+
         # send new player msg to the server
-        
+        new_player_msg = message_parsing.encode_message(
+            message_parsing.MSG_TYPES["NEW_PLAYER"], self.player_id, "")
+        self.client.send_message(new_player_msg)
+
         # wait for game to start
-        while not self.game_is_on:     
+        while not self.incoming_message_queue.empty():
             print("Waiting for game to start...")
 
         # when game starts, start game loop
+        self.game_is_on = True
         self.main_game_loop()
 
     def on_message(self, ch, method, properties, body):
@@ -53,32 +58,37 @@ class Game():
         self.incoming_message_queue.put(body)
 
     def handle_message(self, msg):
-        pass
+        """Handle the message"""
         # TODO: update model!
+        msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
+        if msg_type == message_parsing.MSG_TYPES["PLAYER_POSITION_INIT"]:
+            # set opponent position and own position
+            pass
 
     def main_game_loop(self):
         """The main game loop"""
         while self.game_is_on:
-            
+
             # ---- UPDATE OPPONENTS PADDLE & BALL POSITION ----
             # Check queue for incoming messages
             if not self.incoming_message_queue.empty():
                 msg = self.incoming_message_queue.get()
                 self.handle_message(msg)
-            
+
             # ---- UPDATE MY PADDLE ----
             # Get user input
             dt = self.get_user_input()
-            
+
             # Update model
             self.game_model.increment_my_pos(dt)
 
             # ---- UPDATE VIEW ----
-            self.game_view.update_view(self.game_model.get_my_pos(), self.game_model.get_op_pos(), self.game_model.get_ball_pos())
-            
-            # ---- PUBLISH USER UPDATE ----
-            self.client.send_message((self.player_id, self.game_model.get_my_pos()))
+            self.game_view.update_view(self.game_model.get_my_pos(
+            ), self.game_model.get_op_pos(), self.game_model.get_ball_pos())
 
+            # ---- PUBLISH USER UPDATE ----
+            self.client.send_message(
+                (self.player_id, self.game_model.get_my_pos()))
 
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY"""
@@ -88,4 +98,3 @@ class Game():
             return -1
         else:
             return 0
-    
