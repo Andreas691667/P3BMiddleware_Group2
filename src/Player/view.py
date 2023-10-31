@@ -2,8 +2,10 @@ import turtle
 
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 600
+LEFT_X = -400
+RIGHT_X = 400
 
-class PlayerModel():
+class View():
     """ PlayerModel class """
 
     def __init__(self) -> None:
@@ -11,6 +13,8 @@ class PlayerModel():
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
         self.sc_board = self.create_scoreboard()
+        self.my_pos = 0 # My position
+        self.op_pos = 0 # Opponents position
 
     def create_paddles(self):
         """Create the paddle"""
@@ -20,7 +24,7 @@ class PlayerModel():
         l_pad.color("black")
         l_pad.shapesize(stretch_wid=6, stretch_len=0.7)
         l_pad.penup()
-        l_pad.goto(-400, 0)
+        l_pad.goto(LEFT_X, 0)
 
         r_pad = turtle.Turtle()
         r_pad.speed(0)
@@ -28,10 +32,11 @@ class PlayerModel():
         r_pad.color("black")
         r_pad.shapesize(stretch_wid=6, stretch_len=0.7)
         r_pad.penup()
-        r_pad.goto(400, 0)
+        r_pad.goto(RIGHT_X, 0)
 
         return l_pad, r_pad
 
+    
     def create_ball(self):
         """Create the ball"""
         hit_ball = turtle.Turtle()
@@ -64,3 +69,9 @@ class PlayerModel():
                      align="center", font=("Courier", 24, "normal"))
         return sketch
     
+    def update_view(self, l_pos: int, r_pos: int, ball_pos: (int, int)):
+        """Update the view"""
+        self.left_pad.goto(LEFT_X, l_pos)
+        self.right_pad.goto(RIGHT_X, r_pos)
+        self.hit_ball.goto(*ball_pos)
+        self.sc.update()
