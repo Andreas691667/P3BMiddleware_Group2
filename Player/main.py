@@ -5,3 +5,4 @@ if __name__ == "__main__":
 
     while True:
         view.model.sc.update()
+        print("BusterSalomon is here!")
