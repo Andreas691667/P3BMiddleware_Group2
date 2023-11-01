@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, './src/Player')
+sys.path.insert(0, './src/Utility')
 from config import MSG_TYPES, POS_TYPES
 import message_parsing
 import keyboard
@@ -7,24 +10,21 @@ from client import Client
 from queue import Queue
 import random
 import time
-import sys
-sys.path.insert(0, './src/Player')
-sys.path.insert(0, './src/Utility')
 
+import msvcrt
 
 class Game():
     """Class for the game
     The game is responsible for running the game loop and updating the player's position"""
-
-    def __init__(self) -> None:
+    def __init__(self, key_up : str, key_down : str) -> None:
         self.set_player_id()
         self.client = Client(self.on_message, self.player_id)
         self.game_view = View()
         self.game_model = Model()
         self.incoming_message_queue = Queue()
         self.game_is_on: bool = False
-        self.my_pos: str = ""
-        self.op_pos: str = ""
+        self.key_up : str = key_up
+        self.key_down : str = key_down
 
         self.start_game()
 
@@ -43,8 +43,10 @@ class Game():
 
         # wait for game to start
         while not self.game_is_on:
+            # Waiting for position/game start 
             while self.incoming_message_queue.empty():
-                print("Waiting for game to start...")
+                pass
+                # print("Waiting for game to start...")
             # when message comes, pass it to handle_message
             # if yes, set opponent position and own position
             msg = self.incoming_message_queue.get()
@@ -69,15 +71,19 @@ class Game():
         print("Player received message: ", msg)
         if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
-            self.my_pos = msg_payload
-            self.op_pos = POS_TYPES.LEFT if self.my_pos == POS_TYPES.RIGHT else POS_TYPES.RIGHT
+            self.game_model.set_my_x_pos(msg_payload)
+            self.game_model.set_op_x_pos(POS_TYPES.LEFT if self.game_model.my_x_pos == POS_TYPES.RIGHT else POS_TYPES.RIGHT)
 
         elif msg_type == MSG_TYPES.GAME_CAN_START_SRV:
             # start game
             self.game_is_on = True
 
         elif msg_type == MSG_TYPES.GAME_UPDATE_SRV:
-            self.game_model.increment_op_pos(msg_payload)
+            ball_pos = msg_payload["ball_pos"]
+            op_dt = msg_payload["player_dt"]
+            # the payload of this message is both the opponent position and the ball position
+            self.game_model.increment_op_pos(op_dt)
+            self.game_model.set_ball_pos(ball_pos)
 
     def main_game_loop(self):
         """The main game loop"""
@@ -97,20 +103,23 @@ class Game():
             self.game_model.increment_my_pos(dt)
 
             # ---- UPDATE VIEW ----
-            self.game_view.update_view(self.game_model.get_my_pos(
-            ), self.game_model.get_op_pos(), self.game_model.get_ball_pos(), self.my_pos)
+            self.game_view.update_view(self.game_model.get_my_y_pos(),
+                                       self.game_model.get_op_y_pos(),
+                                       self.game_model.get_ball_pos(),
+                                       self.game_model.get_my_x_pos())
 
             if dt != 0:
                 # ---- PUBLISH USER UPDATE ----
                 self.client.send_message(
-                    (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR, self.player_id, self.game_model.get_my_pos())))
+                    (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR,
+                                                    self.player_id,
+                                                    dt)))
 
     def get_user_input(self) -> str:
-        """Returns KEY_DOWN, KEY_UP or NO_KEY"""
-
-        if (keyboard.is_pressed("up")):
-            return 0.1
-        elif (keyboard.is_pressed("down")):
-            return -0.1
+        """Returns KEY_DOWN, KEY_UP or NO_KEY""" 
+        if (keyboard.is_pressed(self.key_up)):
+            return 10
+        elif (keyboard.is_pressed(self.key_down)):
+            return -10
         else:
             return 0

@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, './src/Utility')
 from config import POS_TYPES, SCREEN_CONFIG
 class View():
-    """ PlayerModel class """
+    """ View class """
 
     def __init__(self) -> None:
         self.my_pad, self.op_pad = self.create_paddles()
@@ -64,9 +64,9 @@ class View():
                      align="center", font=("Courier", 24, "normal"))
         return sketch
     
-    def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_pos : str):
+    def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_x_pos : str):
         """Update the view"""
-        if (my_pos == POS_TYPES.RIGHT):
+        if (my_x_pos == POS_TYPES.RIGHT):
             self.my_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
             self.op_pad.goto(SCREEN_CONFIG.LEFT_X, op_y)
         else:
