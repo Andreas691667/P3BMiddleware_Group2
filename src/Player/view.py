@@ -1,40 +1,35 @@
 import turtle
-
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 600
-LEFT_X = -400
-RIGHT_X = 400
-
+import sys
+sys.path.insert(0, './src/Utility')
+from config import POS_TYPES, SCREEN_CONFIG
 class View():
     """ PlayerModel class """
 
     def __init__(self) -> None:
-        self.left_pad, self.right_pad = self.create_paddles()
+        self.my_pad, self.op_pad = self.create_paddles()
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
         self.sc_board = self.create_scoreboard()
-        self.my_pos = 0 # My position
-        self.op_pos = 0 # Opponents position
 
     def create_paddles(self):
         """Create the paddle"""
-        l_pad = turtle.Turtle()
-        l_pad.speed(0)
-        l_pad.shape("square")
-        l_pad.color("black")
-        l_pad.shapesize(stretch_wid=6, stretch_len=0.7)
-        l_pad.penup()
-        l_pad.goto(LEFT_X, 0)
+        my_pad = turtle.Turtle()
+        my_pad.speed(0)
+        my_pad.shape("square")
+        my_pad.color("black")
+        my_pad.shapesize(stretch_wid=6, stretch_len=0.7)
+        my_pad.penup()
+        my_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
 
-        r_pad = turtle.Turtle()
-        r_pad.speed(0)
-        r_pad.shape("square")
-        r_pad.color("black")
-        r_pad.shapesize(stretch_wid=6, stretch_len=0.7)
-        r_pad.penup()
-        r_pad.goto(RIGHT_X, 0)
+        op_pad = turtle.Turtle()
+        op_pad.speed(0)
+        op_pad.shape("square")
+        op_pad.color("black")
+        op_pad.shapesize(stretch_wid=6, stretch_len=0.7)
+        op_pad.penup()
+        op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
 
-        return l_pad, r_pad
+        return my_pad, op_pad
 
     
     def create_ball(self):
@@ -54,7 +49,7 @@ class View():
         sc = turtle.Screen()
         sc.title("Pong game")
         sc.bgcolor("white")
-        sc.setup(width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
+        sc.setup(width=SCREEN_CONFIG.SCREEN_WIDTH, height=SCREEN_CONFIG.SCREEN_HEIGHT)
         return sc
     
     def create_scoreboard(self):
@@ -69,9 +64,13 @@ class View():
                      align="center", font=("Courier", 24, "normal"))
         return sketch
     
-    def update_view(self, l_pos: int, r_pos: int, ball_pos: (int, int)):
+    def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_pos : str):
         """Update the view"""
-        self.left_pad.goto(LEFT_X, l_pos)
-        self.right_pad.goto(RIGHT_X, r_pos)
+        if (my_pos == POS_TYPES.RIGHT):
+            self.my_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
+            self.op_pad.goto(SCREEN_CONFIG.LEFT_X, op_y)
+        else:
+            self.my_pad.goto(SCREEN_CONFIG.LEFT_X, my_y)
+            self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, op_y)
         self.hit_ball.goto(*ball_pos)
         self.sc.update()

@@ -1,11 +1,15 @@
-import time
-import random
-from queue import Queue
-from client import Client
-from view import View
-from model import Model
+from config import MSG_TYPES, POS_TYPES
+import message_parsing
 import keyboard
-import Utility.message_parsing as message_parsing
+from model import Model
+from view import View
+from client import Client
+from queue import Queue
+import random
+import time
+import sys
+sys.path.insert(0, './src/Player')
+sys.path.insert(0, './src/Utility')
 
 
 class Game():
@@ -13,15 +17,14 @@ class Game():
     The game is responsible for running the game loop and updating the player's position"""
 
     def __init__(self) -> None:
-        # Create the client
-        # TODO: IMPORTANT: We need a notion of which player is left and which is right
-        # This is just a placeholder for now
         self.set_player_id()
         self.client = Client(self.on_message, self.player_id)
         self.game_view = View()
         self.game_model = Model()
         self.incoming_message_queue = Queue()
         self.game_is_on: bool = False
+        self.my_pos: str = ""
+        self.op_pos: str = ""
 
         self.start_game()
 
@@ -32,19 +35,21 @@ class Game():
         self.player_id = random.randint(0, 1000000)
 
     def start_game(self):
-        """Start the game loop"""
-
+        """Start the game loop when accepted by server"""
         # send new player msg to the server
         new_player_msg = message_parsing.encode_message(
-            message_parsing.MSG_TYPES["NEW_PLAYER"], self.player_id, "")
+            MSG_TYPES.NEW_PLAYER_USR, self.player_id, "")
         self.client.send_message(new_player_msg)
 
         # wait for game to start
-        while not self.incoming_message_queue.empty():
-            print("Waiting for game to start...")
+        while not self.game_is_on:
+            while self.incoming_message_queue.empty():
+                print("Waiting for game to start...")
+            # when message comes, pass it to handle_message
+            # if yes, set opponent position and own position
+            msg = self.incoming_message_queue.get()
+            self.handle_message(msg)
 
-        # when game starts, start game loop
-        self.game_is_on = True
         self.main_game_loop()
 
     def on_message(self, ch, method, properties, body):
@@ -61,9 +66,18 @@ class Game():
         """Handle the message"""
         # TODO: update model!
         msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
-        if msg_type == message_parsing.MSG_TYPES["PLAYER_POSITION_INIT"]:
+        print("Player received message: ", msg)
+        if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
-            pass
+            self.my_pos = msg_payload
+            self.op_pos = POS_TYPES.LEFT if self.my_pos == POS_TYPES.RIGHT else POS_TYPES.RIGHT
+
+        elif msg_type == MSG_TYPES.GAME_CAN_START_SRV:
+            # start game
+            self.game_is_on = True
+
+        elif msg_type == MSG_TYPES.GAME_UPDATE_SRV:
+            self.game_model.increment_op_pos(msg_payload)
 
     def main_game_loop(self):
         """The main game loop"""
@@ -84,17 +98,19 @@ class Game():
 
             # ---- UPDATE VIEW ----
             self.game_view.update_view(self.game_model.get_my_pos(
-            ), self.game_model.get_op_pos(), self.game_model.get_ball_pos())
+            ), self.game_model.get_op_pos(), self.game_model.get_ball_pos(), self.my_pos)
 
-            # ---- PUBLISH USER UPDATE ----
-            self.client.send_message(
-                (self.player_id, self.game_model.get_my_pos()))
+            if dt != 0:
+                # ---- PUBLISH USER UPDATE ----
+                self.client.send_message(
+                    (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR, self.player_id, self.game_model.get_my_pos())))
 
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY"""
-        if (keyboard.is_pressed("down")):
-            return 1
-        elif (keyboard.is_pressed("up")):
-            return -1
+
+        if (keyboard.is_pressed("up")):
+            return 0.1
+        elif (keyboard.is_pressed("down")):
+            return -0.1
         else:
             return 0

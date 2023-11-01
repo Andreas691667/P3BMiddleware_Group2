@@ -29,5 +29,5 @@ class Model():
     
     def get_ball_pos (self):
         """d"""
-        return self.op_pos
+        return self.ball_pos
     

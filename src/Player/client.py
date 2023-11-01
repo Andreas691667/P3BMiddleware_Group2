@@ -1,6 +1,9 @@
+import sys
+sys.path.insert(0, './src/Utility')
+
 import pika
 import threading
-from Utility.config import RMQ_CONFIG, MSG_TYPES
+from config import RMQ_CONFIG, MSG_TYPES
 
 
 # based on https://www.rabbitmq.com/tutorials/tutorial-three-python.html
@@ -17,17 +20,17 @@ class Client():
         """Configure the client"""
         # The connection object
         self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=RMQ_CONFIG["SERVER_IP"], port=RMQ_CONFIG["SERVER_PORT"]))
+            pika.ConnectionParameters(host=RMQ_CONFIG.SERVER_IP, port=RMQ_CONFIG.SERVER_PORT))
 
         # The channel object
         self.channel = self.connection.channel()
 
         # Declare the exchanges
         self.channel.exchange_declare(
-            exchange=RMQ_CONFIG["SERVER_EXCHANGE"], exchange_type='direct')  # for incoming messages
+            exchange=RMQ_CONFIG.SERVER_EXCHANGE, exchange_type='direct')  # for incoming messages
 
         self.channel.exchange_declare(
-            exchange=RMQ_CONFIG["USER_EXCHANGE"], exchange_type='fanout')  # for outgoing messages
+            exchange=RMQ_CONFIG.USER_EXCHANGE, exchange_type='fanout')  # for outgoing messages
 
         # Declare the queue (Name is generated uniquely by RMQ)
         # Incoming message queue
@@ -36,7 +39,7 @@ class Client():
 
         # Bind the queue to the exchange
         self.channel.queue_bind(
-            exchange=RMQ_CONFIG["SERVER_EXCHANGE"], queue=self.incoming_message_queue, routing_key=player_id)
+            exchange=RMQ_CONFIG.SERVER_EXCHANGE, queue=self.incoming_message_queue, routing_key=str(player_id))
 
         # Create a consumer for the incoming message queue
         self.channel.basic_consume(
@@ -52,4 +55,4 @@ class Client():
         message: The message to send
         This is done by publishing the message to the outgoing message queue"""
         self.channel.basic_publish(
-            exchange=RMQ_CONFIG["USER_EXCHANGE"], routing_key='', body=message)
+            exchange=RMQ_CONFIG.USER_EXCHANGE, routing_key='', body=message)
