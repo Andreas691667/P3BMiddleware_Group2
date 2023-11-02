@@ -149,3 +149,15 @@ class View():
                 self.op_sc_board.write(f"{my_score}", font=("Courier", 50, "normal"))
 
         self.sc.update()
+
+    def reset_view(self):
+        """Reset the view"""
+        self.my_sc_board.clear()
+        self.op_sc_board.clear()
+        self.my_sc_board.write("0", font=("Courier", 50, "normal"))
+        self.op_sc_board.write("0", font=("Courier", 50, "normal"))
+        self.my_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
+        self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
+        self.hit_ball.goto(0, 0)
+        self.show_winner("")
+        self.sc.update()

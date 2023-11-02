@@ -28,8 +28,8 @@ class SCREEN_CONFIG():
     """Screen configuration"""
     SCREEN_WIDTH = 1300
     SCREEN_HEIGHT = 600
-    LEFT_X = -SCREEN_WIDTH/2+100
-    RIGHT_X = SCREEN_WIDTH/2-100
+    LEFT_X = -SCREEN_WIDTH/2+110
+    RIGHT_X = SCREEN_WIDTH/2-110
 
 class PADDLE_CONFIG():
     """Paddle configuration"""
@@ -47,7 +47,7 @@ class BALL_STATE():
 class BALL_CONFIG():
     """Ball configuration"""
     BALL_RADIUS = 0.5
-    MAX_BALL_SPEED = 10
+    MAX_BALL_SPEED = 15
 
 # types
 KEY_UP = "KEY_UP"

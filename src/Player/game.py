@@ -28,7 +28,7 @@ class Game():
         self.game_finished : bool = False
         self.winner : str = ""
 
-        self.start_game()
+        self.initialize_game()
 
     def set_player_id(self):
         """Generate a unique player id randomly"""
@@ -36,7 +36,7 @@ class Game():
         random.seed(time_ns)
         self.player_id = random.randint(0, 1000000)
 
-    def start_game(self):
+    def initialize_game(self):
         """Start the game loop when accepted by server"""
         # send new player msg to the server
         new_player_msg = message_parsing.encode_message(
@@ -56,7 +56,21 @@ class Game():
             msg = self.incoming_message_queue.get()
             self.handle_message(msg)
 
-        self.main_game_loop()
+        # start game
+        self.start_game()
+
+
+    def start_game(self):
+        while True:
+            self.main_game_loop()
+            # wait for key press to restart game
+            while not keyboard.is_pressed("space"):
+                pass
+            self.game_finished = False
+            self.game_view.reset_view()
+            break
+        self.initialize_game()
+
 
     def on_message(self, ch, method, properties, body):
         """Callback function for when a message is received
@@ -72,7 +86,7 @@ class Game():
         """Handle the message"""
         # TODO: update model!
         msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
-        # print("Player received message: ", msg)
+        print("Player received message: ", msg)
         if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
             self.game_model.set_my_x_pos(msg_payload)

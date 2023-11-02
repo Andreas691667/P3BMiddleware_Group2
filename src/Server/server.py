@@ -28,7 +28,7 @@ class Server():
         self.left_score: int = 0
         self.right_score: int = 0
         self.winner: str = ""
-        self.winning_score = 5
+        self.winning_score = 2
 
         self.consumer_thread = Thread(target=self.start_consuming)
         self.state_thread = Thread(target=self.state_thread_fun)
@@ -150,7 +150,7 @@ class Server():
         method: The method object
         properties: The properties object
         body: The message body"""
-        # print("Server received message: ", body)
+        print("Server received message: ", body)
         self.handle_message(body)
 
     def start_consuming(self):
@@ -164,12 +164,6 @@ class Server():
         x_val_list = list(self.x_positions.values())
         return list(self.y_positions.values())[x_val_list.index(x_pos)]
     
-        # """Get the y position from the x position"""
-        # for player, x in self.x_positions.items():
-        #     if x == x_pos:
-        #         return self.y_positions[player]
-        # return None  # Handle the case where x_pos is not found
-        
     def calculate_ball_pos(self):
         """ Calculate new ball position """
         self.ball_pos = (self.ball_pos[0] + self.d_ball[0],
