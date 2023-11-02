@@ -1,7 +1,7 @@
 import turtle
 import sys
 sys.path.insert(0, './src/Utility')
-from config import POS_TYPES, SCREEN_CONFIG
+from config import POS_TYPES, SCREEN_CONFIG, PADDLE_CONFIG
 class View():
     """ View class """
 
@@ -17,7 +17,7 @@ class View():
         my_pad.speed(0)
         my_pad.shape("square")
         my_pad.color("black")
-        my_pad.shapesize(stretch_wid=6, stretch_len=0.7)
+        my_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
         my_pad.penup()
         my_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
 
@@ -25,12 +25,11 @@ class View():
         op_pad.speed(0)
         op_pad.shape("square")
         op_pad.color("black")
-        op_pad.shapesize(stretch_wid=6, stretch_len=0.7)
+        op_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
         op_pad.penup()
         op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
 
         return my_pad, op_pad
-
     
     def create_ball(self):
         """Create the ball"""

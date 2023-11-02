@@ -22,10 +22,10 @@ class Model():
         if not self.paddle_collision(self.my_y_pos + dt):
             self.my_y_pos = self.my_y_pos + dt
 
-    def increment_op_pos(self, dt: int) -> None:
+    def set_op_y_pos(self, new_y_pos: int) -> None:
         """d"""
-        if not self.paddle_collision(self.op_y_pos + dt):
-            self.op_y_pos = self.op_y_pos + dt
+        if not self.paddle_collision(new_y_pos):
+            self.op_y_pos = new_y_pos
 
     def set_ball_pos(self, pos) -> None:
         """d"""
@@ -34,6 +34,10 @@ class Model():
     def get_my_y_pos(self):
         """d"""
         return self.my_y_pos
+    
+    def set_my_y_pos(self, y_pos: int) -> None:
+        """d"""
+        self.my_y_pos = y_pos
 
     def get_op_y_pos(self):
         """d"""
@@ -55,7 +59,7 @@ class Model():
     def get_my_x_pos(self) -> str:
         """doc"""
         return self.my_x_pos
-
+    
     def get_op_x_pos(self) -> str:
         """doc"""
         return self.op_x_pos

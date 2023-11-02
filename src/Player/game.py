@@ -11,8 +11,6 @@ from queue import Queue
 import random
 import time
 
-import msvcrt
-
 class Game():
     """Class for the game
     The game is responsible for running the game loop and updating the player's position"""
@@ -80,9 +78,11 @@ class Game():
 
         elif msg_type == MSG_TYPES.GAME_UPDATE_SRV:
             ball_pos = msg_payload["ball_pos"]
-            op_dt = msg_payload["player_dt"]
+            op_y_pos = msg_payload["op_y_pos"]
+            my_y_pos = msg_payload["my_y_pos"]
             # the payload of this message is both the opponent position and the ball position
-            self.game_model.increment_op_pos(op_dt)
+            self.game_model.set_my_y_pos(my_y_pos)
+            self.game_model.set_op_y_pos(op_y_pos)
             self.game_model.set_ball_pos(ball_pos)
 
     def main_game_loop(self):
@@ -98,9 +98,6 @@ class Game():
             # ---- UPDATE MY PADDLE ----
             # Get user input
             dt = self.get_user_input()
-
-            # Update model
-            self.game_model.increment_my_pos(dt)
 
             # ---- UPDATE VIEW ----
             self.game_view.update_view(self.game_model.get_my_y_pos(),
@@ -118,8 +115,8 @@ class Game():
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY""" 
         if (keyboard.is_pressed(self.key_up)):
-            return 10
+            return 5
         elif (keyboard.is_pressed(self.key_down)):
-            return -10
+            return -5
         else:
             return 0

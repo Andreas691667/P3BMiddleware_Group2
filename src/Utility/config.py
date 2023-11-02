@@ -29,6 +29,19 @@ class SCREEN_CONFIG():
     LEFT_X = -400
     RIGHT_X = 400
 
+class PADDLE_CONFIG():
+    """Paddle configuration"""
+    PADDLE_WIDTH = 2
+    PADDLE_HEIGHT = 6
+
+class BALL_STATE():
+    """Ball state"""
+    BORDER_COLLISION = "BORDER_COLLISION"
+    PADDLE_COLLISION = "PADDLE_COLLISION"
+    RIGHT_GOAL = "RIGHT_GOAL"
+    LEFT_GOAL = "LEFT_GOAL"
+    NO_COLLISION = "NO_COLLISION"
+
 # types
 KEY_UP = "KEY_UP"
 KEY_DOWN = "KEY_DOWN"

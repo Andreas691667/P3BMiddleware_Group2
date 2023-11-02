@@ -1,71 +1,81 @@
 import sys
 sys.path.insert(0, './src/Utility')
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 import pika
 import message_parsing
-from config import RMQ_CONFIG, MSG_TYPES, POS_TYPES
-from queue import Queue, Empty
+from config import RMQ_CONFIG, MSG_TYPES, POS_TYPES, BALL_STATE
+import collision
 import time
 
 class Server():
     """Class for the leader of the game"""
 
     def __init__(self) -> None:
-        self.configure_server()
         self.game_is_on: bool = False
+
+        self.incoming_channel = self.create_channel()
+        self.outgoing_channel = self.create_channel()
+        self.configure_incoming_channel()
+        self.configure_outgoing_channel()
 
         # Model variables
         self.x_positions: dict[int, str] = {}  # player_id : int => x_pos : str (LEFT or RIGHT)
         self.y_positions: dict[int, int] = {}  # player_id : int => y_pos : int
         self.ball_pos: (int, int) = (0, 0)
-        self.d_ball: (int, int) = (1, 1)
-        self.refresh_rate: int = 60
-
-        self.incoming_message_queue = Queue()
+        self.d_ball: (int, int) = (3, 3)
+        self.refresh_rate: int = 10
+        self.left_score: int = 0
+        self.right_score: int = 0
 
         self.consumer_thread = Thread(target=self.start_consuming)
         self.state_thread = Thread(target=self.state_thread_fun)
         
         self.state_thread_stop_event = Event()
+        self.mutex = Lock()
         
         self.consumer_thread.start()
         self.state_thread.start()
 
 
-    def configure_server(self):
+    def create_channel(self):
         """Configure the server"""
         # The connection object
-        self.connection = pika.BlockingConnection(
+        connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=RMQ_CONFIG.SERVER_IP, port=RMQ_CONFIG.SERVER_PORT))
-
         # The channel object
-        self.channel = self.connection.channel()
+        channel = connection.channel()
 
-        # Declare the exchanges
-        self.channel.exchange_declare(
-            exchange=RMQ_CONFIG.SERVER_EXCHANGE, exchange_type='direct')  # for incoming messages
-        self.channel.exchange_declare(
-            exchange=RMQ_CONFIG.USER_EXCHANGE, exchange_type='fanout')  # for outgoing messages
+        return channel
 
+    def configure_incoming_channel(self):
+        """Configure the consumer channel"""
+        self.incoming_channel.exchange_declare(
+            exchange=RMQ_CONFIG.USER_EXCHANGE, exchange_type='fanout')  # for incomming messages
+        
         # Declare the queue (Name is generated uniquely by RMQ)
         # Incoming message queue
-        result = self.channel.queue_declare(queue='', exclusive=True)
+        result = self.incoming_channel.queue_declare(queue='', exclusive=True)
         self.incoming_message_queue = result.method.queue
 
         # Bind the queue to the exchange
-        self.channel.queue_bind(
+        self.incoming_channel.queue_bind(
             exchange=RMQ_CONFIG.USER_EXCHANGE, queue=self.incoming_message_queue)
 
         # Create a consumer for the incoming message queue
-        self.channel.basic_consume(
+        self.incoming_channel.basic_consume(
             queue=self.incoming_message_queue, on_message_callback=self.on_message, auto_ack=True)
+
+    def configure_outgoing_channel(self):
+        """Configure the outgoing channel"""
+        self.outgoing_channel.exchange_declare(
+            exchange=RMQ_CONFIG.SERVER_EXCHANGE, exchange_type='direct')  # for incoming messages
 
     def send_message(self, message, player_id):
         """Send message to the rabbitmq server
         message: The message to send
         This is done by publishing the message to the server updates queue
         The routing key is the player id =(left or right)"""
-        self.channel.basic_publish(
+        self.outgoing_channel.basic_publish(
             exchange=RMQ_CONFIG.SERVER_EXCHANGE, routing_key=str(player_id), body=message)
 
     def assign_player_x_position(self, player_id):
@@ -77,14 +87,12 @@ class Server():
         else:
             self.x_positions[player_id] = POS_TYPES.RIGHT
 
-        # if two players have joined, send game can start message to both players
+        # if two players have joined, initialize y pos and the game can start (return true)
         if len(self.x_positions) == 2:
-            self.game_is_on = True
             self.y_positions = {player_id: 0 for player_id in self.x_positions}
-            # for player_id in self.x_positions:
-            #     game_can_start_msg = message_parsing.encode_message(
-            #         MSG_TYPES.GAME_CAN_START_SRV, player_id, "")
-            #     self.send_message(game_can_start_msg, player_id)
+            return True
+        else:
+            return False
 
     def update_player_y_position(self, player_id, new_y_pos):
         """Update the player's position
@@ -93,12 +101,10 @@ class Server():
         returns opposite id than sender
         """
         # Update position of player that sent message
-        self.y_positions[player_id] = new_y_pos
+        self.mutex.acquire()
+        self.y_positions[player_id] += new_y_pos
+        self.mutex.release()
 
-        # Get opposite id of sender
-        ids = list(self.x_positions.keys())
-        rec_id = ids[1] if ids[0] == player_id else ids[0]
-        return rec_id
 
     def handle_message(self, msg):
         """Handle the message
@@ -106,25 +112,23 @@ class Server():
         msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
 
         if msg_type == MSG_TYPES.NEW_PLAYER_USR:
-            self.assign_player_x_position(sender_id)
+            game_can_start : bool = self.assign_player_x_position(sender_id)
             # send player position to back to player
             player_pos_msg = message_parsing.encode_message(
                 MSG_TYPES.PLAYER_POSITION_INIT_SRV, sender_id, self.x_positions[sender_id])
             self.send_message(player_pos_msg, sender_id)
 
-            if self.game_is_on:
+            if game_can_start:
                 # send game can start message to both players
                 for player_id in self.x_positions:
                     game_can_start_msg = message_parsing.encode_message(
                         MSG_TYPES.GAME_CAN_START_SRV, player_id, "")
                     self.send_message(game_can_start_msg, player_id)
+
+                self.game_is_on = True
                     
         elif msg_type == MSG_TYPES.PLAYER_UPDATE_USR:
-            op_player_id = self.update_player_y_position(sender_id, msg_payload)
-            # send game update to other player
-        #     player_update_msg = message_parsing.encode_message(
-        #         MSG_TYPES.GAME_UPDATE_SRV, op_player_id, msg_payload)
-        #     self.send_message(player_update_msg, op_player_id)
+            self.update_player_y_position(sender_id, msg_payload)
 
         else:
             print("Unknown message type: ", msg_type)
@@ -136,49 +140,87 @@ class Server():
         properties: The properties object
         body: The message body"""
         print("Server received message: ", body)
-        self.incoming_message_queue.put(body)
-        
-        # self.handle_message(body)
+        self.handle_message(body)
 
     def start_consuming(self):
         """Start consuming messages
         This function runs in a thread"""
-        self.channel.start_consuming()
+        self.incoming_channel.start_consuming()
+
+    def get_y_from_x(self, x_pos):
+        """Get the y position from the x position"""
+        x_val_list = list(self.x_positions.values())
+        return list(self.y_positions.values())[x_val_list.index(x_pos)]
+    
+        # """Get the y position from the x position"""
+        # for player, x in self.x_positions.items():
+        #     if x == x_pos:
+        #         return self.y_positions[player]
+        # return None  # Handle the case where x_pos is not found
+        
+    def calculate_ball_pos(self):
+        """ Calculate new ball position """
+        self.ball_pos = (self.ball_pos[0] + self.d_ball[0],
+                         self.ball_pos[1] + self.d_ball[1])
     
     def state_thread_fun(self):
         """State thread"""
         # Get message
         while not self.state_thread_stop_event.is_set():
-            # Check queue for incoming messages
-            try:
-                msg = self.incoming_message_queue.get(timeout=1)
-                              
-            except Empty:
-                pass
-                
-            else:
-                self.handle_message(msg)
+            if self.game_is_on:           
+                # Check for collision
+                self.calculate_ball_pos()
+                ball_state, payload = collision.determine_game_state(self.ball_pos,
+                                                            self.get_y_from_x(POS_TYPES.LEFT),
+                                                            self.get_y_from_x(POS_TYPES.RIGHT),
+                                                            self.d_ball)
+                # Check for paddle collision or border collision
+                if(ball_state == BALL_STATE.PADDLE_COLLISION or
+                   ball_state == BALL_STATE.BORDER_COLLISION):
+                    self.d_ball = payload
+                    # self.calculate_ball_pos() #not here, since players should see event
 
-            if self.game_is_on:
-                # Calculate new ball position
-                new_x = self.ball_pos[0] + self.d_ball[0]
-                new_y = self.ball_pos[1] + self.d_ball[1]
-                self.ball_pos = (new_x, new_y)
+                # Increment goals
+                if (ball_state == BALL_STATE.LEFT_GOAL):
+                    self.left_score += 1
+                    self.ball_pos = (0, 0)
+                    # self.d_ball *= -1
+
+                if (ball_state == BALL_STATE.RIGHT_GOAL):
+                    self.right_score += 1
+                    self.ball_pos = (0, 0)
+                    # self.d_ball *= -1
+                
+                # Determine winner?    
+
+                    # Increment score
+                # If goal
+                # Increment scores... determine winner?
+
+                # If border hit, change velocity
 
                 # send game update to both players
                 for player_id in self.x_positions:
                     # Construct new message
-                    new_msg_payload = {
-                        "ball_pos": self.ball_pos,
-                        "player_dt": self.y_positions[player_id] 
-                    }
-
-                    # Get opposite id of sender
+                    # TODO: Include points(goal)
+                    # Get opposite id of the one we send message to
                     ids = list(self.x_positions.keys())
                     op_id = ids[1] if ids[0] == player_id else ids[0]
+
+                    self.mutex.acquire()
+                    new_msg_payload = {
+                        "ball_pos": self.ball_pos,
+                        "my_y_pos": self.y_positions[player_id],
+                        "op_y_pos": self.y_positions[op_id] 
+                    }
+                    self.mutex.release()
                     # send message
                     update_msg = message_parsing.encode_message(
-                        MSG_TYPES.GAME_UPDATE_SRV, op_id, new_msg_payload)
-                    
+                        MSG_TYPES.GAME_UPDATE_SRV, player_id, new_msg_payload)
+                   
                     self.send_message(update_msg, player_id)
-                    time.sleep(1/self.refresh_rate)
+           
+            time.sleep(1/self.refresh_rate)
+
+
+    
