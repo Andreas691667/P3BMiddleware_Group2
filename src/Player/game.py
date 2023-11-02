@@ -23,6 +23,8 @@ class Game():
         self.game_is_on: bool = False
         self.key_up : str = key_up
         self.key_down : str = key_down
+        self.refresh_rate: int = 10
+        self.change_score = False
 
         self.start_game()
 
@@ -38,6 +40,8 @@ class Game():
         new_player_msg = message_parsing.encode_message(
             MSG_TYPES.NEW_PLAYER_USR, self.player_id, "")
         self.client.send_message(new_player_msg)
+
+        print("Waiting for game to start...")
 
         # wait for game to start
         while not self.game_is_on:
@@ -66,7 +70,7 @@ class Game():
         """Handle the message"""
         # TODO: update model!
         msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
-        print("Player received message: ", msg)
+        # print("Player received message: ", msg)
         if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
             self.game_model.set_my_x_pos(msg_payload)
@@ -80,10 +84,26 @@ class Game():
             ball_pos = msg_payload["ball_pos"]
             op_y_pos = msg_payload["op_y_pos"]
             my_y_pos = msg_payload["my_y_pos"]
-            # the payload of this message is both the opponent position and the ball position
+            left_score = msg_payload["left_score"]
+            right_score = msg_payload["right_score"]
+            game_finished = msg_payload["game_finished"]
+
+            my_score = left_score if self.game_model.my_x_pos == POS_TYPES.LEFT else right_score
+            op_score = left_score if self.game_model.my_x_pos == POS_TYPES.RIGHT else right_score
+
+            # Evaluate if score have changed
+            if (my_score != self.game_model.get_my_score() or op_score != self.game_model.get_op_score()):
+                self.change_score = True
+
             self.game_model.set_my_y_pos(my_y_pos)
             self.game_model.set_op_y_pos(op_y_pos)
             self.game_model.set_ball_pos(ball_pos)
+            self.game_model.set_my_score(my_score)
+            self.game_model.set_op_score(op_score)
+
+            if game_finished[0]:
+                print("Game finished!", game_finished)
+                
 
     def main_game_loop(self):
         """The main game loop"""
@@ -103,7 +123,13 @@ class Game():
             self.game_view.update_view(self.game_model.get_my_y_pos(),
                                        self.game_model.get_op_y_pos(),
                                        self.game_model.get_ball_pos(),
-                                       self.game_model.get_my_x_pos())
+                                       self.game_model.get_my_x_pos(),
+                                        self.game_model.get_my_score(),
+                                        self.game_model.get_op_score(),
+                                        self.change_score
+                                       )
+            # Reset
+            self.change_score = False
 
             if dt != 0:
                 # ---- PUBLISH USER UPDATE ----
@@ -111,12 +137,14 @@ class Game():
                     (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR,
                                                     self.player_id,
                                                     dt)))
+            
+            # time.sleep(1/self.refresh_rate)
 
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY""" 
         if (keyboard.is_pressed(self.key_up)):
-            return 5
+            return 10
         elif (keyboard.is_pressed(self.key_down)):
-            return -5
+            return -10
         else:
             return 0

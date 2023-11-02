@@ -11,6 +11,7 @@ class View():
         self.sc = self.create_screen()
         self.sc_board = self.create_scoreboard()
 
+
     def create_paddles(self):
         """Create the paddle"""
         my_pad = turtle.Turtle()
@@ -59,11 +60,11 @@ class View():
         sketch.penup()
         sketch.hideturtle()
         sketch.goto(0, 260)
-        sketch.write("Left_player : 0 Right_player: 0",
+        sketch.write("My score : 0 Opponent's score: 0",
                      align="center", font=("Courier", 24, "normal"))
         return sketch
     
-    def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_x_pos : str):
+    def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_x_pos : str, my_score: int, op_score: int, update_score : bool):
         """Update the view"""
         if (my_x_pos == POS_TYPES.RIGHT):
             self.my_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
@@ -72,4 +73,10 @@ class View():
             self.my_pad.goto(SCREEN_CONFIG.LEFT_X, my_y)
             self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, op_y)
         self.hit_ball.goto(*ball_pos)
+    
+        if update_score:
+            self.sc_board.clear()
+            self.sc_board.write(f"My score : {my_score} Opponent's score: {op_score}",
+                         align="center", font=("Courier", 24, "normal"))
+
         self.sc.update()

@@ -22,10 +22,11 @@ class Server():
         self.x_positions: dict[int, str] = {}  # player_id : int => x_pos : str (LEFT or RIGHT)
         self.y_positions: dict[int, int] = {}  # player_id : int => y_pos : int
         self.ball_pos: (int, int) = (0, 0)
-        self.d_ball: (int, int) = (3, 3)
+        self.d_ball: (int, int) = (5, 5)
         self.refresh_rate: int = 10
         self.left_score: int = 0
         self.right_score: int = 0
+        self.winner: str = ""
 
         self.consumer_thread = Thread(target=self.start_consuming)
         self.state_thread = Thread(target=self.state_thread_fun)
@@ -139,12 +140,13 @@ class Server():
         method: The method object
         properties: The properties object
         body: The message body"""
-        print("Server received message: ", body)
+        # print("Server received message: ", body)
         self.handle_message(body)
 
     def start_consuming(self):
         """Start consuming messages
         This function runs in a thread"""
+        print("Server is waiting for messages...")
         self.incoming_channel.start_consuming()
 
     def get_y_from_x(self, x_pos):
@@ -183,21 +185,17 @@ class Server():
                 # Increment goals
                 if (ball_state == BALL_STATE.LEFT_GOAL):
                     self.left_score += 1
+                    if (self.left_score >= 2):
+                        self.winner = POS_TYPES.LEFT
+                        self.game_is_on = False
                     self.ball_pos = (0, 0)
-                    # self.d_ball *= -1
 
                 if (ball_state == BALL_STATE.RIGHT_GOAL):
                     self.right_score += 1
-                    self.ball_pos = (0, 0)
-                    # self.d_ball *= -1
-                
-                # Determine winner?    
-
-                    # Increment score
-                # If goal
-                # Increment scores... determine winner?
-
-                # If border hit, change velocity
+                    if (self.right_score >= 2):
+                        self.winner = POS_TYPES.RIGHT
+                        self.game_is_on = False
+                    self.ball_pos = (0, 0)                   
 
                 # send game update to both players
                 for player_id in self.x_positions:
@@ -207,11 +205,14 @@ class Server():
                     ids = list(self.x_positions.keys())
                     op_id = ids[1] if ids[0] == player_id else ids[0]
 
-                    self.mutex.acquire()
+                    self.mutex.acquire(blocking=False)
                     new_msg_payload = {
                         "ball_pos": self.ball_pos,
                         "my_y_pos": self.y_positions[player_id],
-                        "op_y_pos": self.y_positions[op_id] 
+                        "op_y_pos": self.y_positions[op_id],
+                        "left_score": self.left_score,
+                        "right_score": self.right_score,
+                        "game_finished": (not self.game_is_on, self.winner)
                     }
                     self.mutex.release()
                     # send message

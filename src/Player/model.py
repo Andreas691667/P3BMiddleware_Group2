@@ -11,16 +11,13 @@ class Model():
         self.my_x_pos: str = ""
         self.op_x_pos: str = ""
         self.ball_pos: (int, int) = (0, 0)
+        self.my_score: int = 0
+        self.op_score: int = 0
 
 
     def paddle_collision(self, paddle_y_pos: int) -> bool:
         """Returns True if there is a collision with the paddle, False otherwise"""
         return paddle_y_pos > SCREEN_CONFIG.SCREEN_HEIGHT/2-6 or paddle_y_pos < -SCREEN_CONFIG.SCREEN_HEIGHT/2+6
-
-    def increment_my_pos(self, dt: int) -> None:
-        """d"""
-        if not self.paddle_collision(self.my_y_pos + dt):
-            self.my_y_pos = self.my_y_pos + dt
 
     def set_op_y_pos(self, new_y_pos: int) -> None:
         """d"""
@@ -37,7 +34,8 @@ class Model():
     
     def set_my_y_pos(self, y_pos: int) -> None:
         """d"""
-        self.my_y_pos = y_pos
+        if not self.paddle_collision(y_pos):
+            self.my_y_pos = y_pos
 
     def get_op_y_pos(self):
         """d"""
@@ -63,4 +61,21 @@ class Model():
     def get_op_x_pos(self) -> str:
         """doc"""
         return self.op_x_pos
-    # endregion
+    
+    def set_my_score(self, score: int) -> None:
+        """doc"""
+        self.my_score = score
+    
+    def get_my_score(self) -> int:
+        """d"""
+        return self.my_score
+    
+    def set_op_score(self, score: int) -> None:
+        """d"""
+        self.op_score = score
+    
+    def get_op_score(self) -> int:
+        """d"""
+        return self.op_score
+
+#endregion

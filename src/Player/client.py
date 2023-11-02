@@ -40,7 +40,8 @@ class Client():
         
         # Declare the queue (Name is generated uniquely by RMQ)
         # Incoming message queue
-        result = self.incoming_channel.queue_declare(queue='', exclusive=True)
+        args = {"x-max-length": 1}
+        result = self.incoming_channel.queue_declare(queue='', exclusive=True, arguments=args)
         self.incoming_message_queue = result.method.queue
 
         # Bind the queue to the exchange
