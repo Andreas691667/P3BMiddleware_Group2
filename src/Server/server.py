@@ -19,7 +19,7 @@ class Server():
         self.y_positions: dict[int, int] = {}  # player_id : int => y_pos : int
         self.ball_pos: (int, int) = (0, 0)
         self.d_ball: (int, int) = (1, 1)
-        self.refresh_rate: int = 10
+        self.refresh_rate: int = 60
 
         self.incoming_message_queue = Queue()
 
