@@ -25,6 +25,8 @@ class Game():
         self.key_down : str = key_down
         self.refresh_rate: int = 10
         self.change_score = False
+        self.game_finished : bool = False
+        self.winner : str = ""
 
         self.start_game()
 
@@ -79,6 +81,11 @@ class Game():
         elif msg_type == MSG_TYPES.GAME_CAN_START_SRV:
             # start game
             self.game_is_on = True
+            self.game_view.clear_countdown()
+
+        elif msg_type == MSG_TYPES.COUNTDOWN_SRV:
+            print("Countdown: ", msg_payload)
+            self.game_view.show_countdown(msg_payload)
 
         elif msg_type == MSG_TYPES.GAME_UPDATE_SRV:
             ball_pos = msg_payload["ball_pos"]
@@ -102,6 +109,8 @@ class Game():
             self.game_model.set_op_score(op_score)
 
             if game_finished[0]:
+                self.game_finished = True
+                self.winner = game_finished[1]
                 print("Game finished!", game_finished)
                 
 
@@ -130,6 +139,12 @@ class Game():
                                        )
             # Reset
             self.change_score = False
+
+            # check if game has finished
+            if self.game_finished:
+                self.game_view.show_winner(self.winner)
+                self.game_is_on = False
+                break
 
             if dt != 0:
                 # ---- PUBLISH USER UPDATE ----

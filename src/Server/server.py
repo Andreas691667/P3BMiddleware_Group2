@@ -3,9 +3,10 @@ sys.path.insert(0, './src/Utility')
 from threading import Thread, Event, Lock
 import pika
 import message_parsing
-from config import RMQ_CONFIG, MSG_TYPES, POS_TYPES, BALL_STATE
+from config import RMQ_CONFIG, MSG_TYPES, POS_TYPES, BALL_STATE, BALL_CONFIG
 import collision
 import time
+import random
 
 class Server():
     """Class for the leader of the game"""
@@ -22,11 +23,12 @@ class Server():
         self.x_positions: dict[int, str] = {}  # player_id : int => x_pos : str (LEFT or RIGHT)
         self.y_positions: dict[int, int] = {}  # player_id : int => y_pos : int
         self.ball_pos: (int, int) = (0, 0)
-        self.d_ball: (int, int) = (5, 5)
+        self.d_ball: (int, int) = (BALL_CONFIG.MAX_BALL_SPEED, BALL_CONFIG.MAX_BALL_SPEED)
         self.refresh_rate: int = 10
         self.left_score: int = 0
         self.right_score: int = 0
         self.winner: str = ""
+        self.winning_score = 5
 
         self.consumer_thread = Thread(target=self.start_consuming)
         self.state_thread = Thread(target=self.state_thread_fun)
@@ -120,7 +122,15 @@ class Server():
             self.send_message(player_pos_msg, sender_id)
 
             if game_can_start:
-                # send game can start message to both players
+                # send three countdown messages every 1 second before starting game
+                for i in range(3, 0, -1):
+                    for player_id in self.x_positions:
+                        countdown_msg = message_parsing.encode_message(
+                            MSG_TYPES.COUNTDOWN_SRV, player_id, i)
+                        self.send_message(countdown_msg, player_id)
+                    time.sleep(1)
+
+                # start game
                 for player_id in self.x_positions:
                     game_can_start_msg = message_parsing.encode_message(
                         MSG_TYPES.GAME_CAN_START_SRV, player_id, "")
@@ -164,6 +174,10 @@ class Server():
         """ Calculate new ball position """
         self.ball_pos = (self.ball_pos[0] + self.d_ball[0],
                          self.ball_pos[1] + self.d_ball[1])
+        
+    def set_random_ball_speed(self):
+        """ Randomize the speed of the ball """
+        self.d_ball = (BALL_CONFIG.MAX_BALL_SPEED, random.randint(-BALL_CONFIG.MAX_BALL_SPEED, BALL_CONFIG.MAX_BALL_SPEED))
     
     def state_thread_fun(self):
         """State thread"""
@@ -185,17 +199,19 @@ class Server():
                 # Increment goals
                 if (ball_state == BALL_STATE.LEFT_GOAL):
                     self.left_score += 1
-                    if (self.left_score >= 2):
+                    if (self.left_score >= self.winning_score):
                         self.winner = POS_TYPES.LEFT
                         self.game_is_on = False
                     self.ball_pos = (0, 0)
+                    self.set_random_ball_speed()
 
                 if (ball_state == BALL_STATE.RIGHT_GOAL):
                     self.right_score += 1
-                    if (self.right_score >= 2):
+                    if (self.right_score >= self.winning_score):
                         self.winner = POS_TYPES.RIGHT
                         self.game_is_on = False
-                    self.ball_pos = (0, 0)                   
+                    self.ball_pos = (0, 0)
+                    self.set_random_ball_speed()   
 
                 # send game update to both players
                 for player_id in self.x_positions:

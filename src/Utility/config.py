@@ -16,6 +16,8 @@ class MSG_TYPES():
     # Type used to indicate a change of game state, that is positions of players and ball
     GAME_UPDATE_SRV = "GAME_UPDATE"
     GAME_CAN_START_SRV = "GAME_CAN_START" # Type used to indicate that the game can start (i.e. there are now two players)
+    COUNTDOWN_SRV = "COUNTDOWN" # Type used to indicate that the game is starting
+
 
 class POS_TYPES():
     """Position types"""
@@ -24,14 +26,14 @@ class POS_TYPES():
 
 class SCREEN_CONFIG():
     """Screen configuration"""
-    SCREEN_WIDTH = 1000
+    SCREEN_WIDTH = 1300
     SCREEN_HEIGHT = 600
-    LEFT_X = -400
-    RIGHT_X = 400
+    LEFT_X = -SCREEN_WIDTH/2+100
+    RIGHT_X = SCREEN_WIDTH/2-100
 
 class PADDLE_CONFIG():
     """Paddle configuration"""
-    PADDLE_WIDTH = 2
+    PADDLE_WIDTH = 1
     PADDLE_HEIGHT = 6
 
 class BALL_STATE():
@@ -41,6 +43,11 @@ class BALL_STATE():
     RIGHT_GOAL = "RIGHT_GOAL"
     LEFT_GOAL = "LEFT_GOAL"
     NO_COLLISION = "NO_COLLISION"
+
+class BALL_CONFIG():
+    """Ball configuration"""
+    BALL_RADIUS = 0.5
+    MAX_BALL_SPEED = 10
 
 # types
 KEY_UP = "KEY_UP"

@@ -54,9 +54,9 @@ def goal(ball_pos: (int, int)) -> BALL_STATE:
     """Determine if a goal has been scored"""
     ball_x = ball_pos[0]
     if ball_x < -SCREEN_CONFIG.SCREEN_WIDTH/2:
-        return BALL_STATE.LEFT_GOAL
-    elif ball_x > SCREEN_CONFIG.SCREEN_WIDTH/2:
         return BALL_STATE.RIGHT_GOAL
+    elif ball_x > SCREEN_CONFIG.SCREEN_WIDTH/2:
+        return BALL_STATE.LEFT_GOAL
     else:
         return None
 
