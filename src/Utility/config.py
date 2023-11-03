@@ -49,6 +49,9 @@ class BALL_CONFIG():
     BALL_RADIUS = 0.5
     MAX_BALL_SPEED = 15
 
+class PLAYER_COLORS():
+    LEFT_PLAYER_COLOR = "red"
+    RIGHT_PLAYER_COLOR = "blue"
 # types
 KEY_UP = "KEY_UP"
 KEY_DOWN = "KEY_DOWN"

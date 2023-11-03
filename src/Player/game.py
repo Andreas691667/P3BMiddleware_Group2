@@ -79,14 +79,19 @@ class Game():
             # set opponent position and own position
             self.game_model.set_my_x_pos(msg_payload)
             self.game_model.set_op_x_pos(POS_TYPES.LEFT if self.game_model.my_x_pos == POS_TYPES.RIGHT else POS_TYPES.RIGHT)
+            
 
         elif msg_type == MSG_TYPES.GAME_CAN_START_SRV:
             # start game
             self.game_is_on = True
             self.game_view.clear_countdown()
+            self.game_view.clear_player_position()
+            self.game_view.set_player_colors()
 
         elif msg_type == MSG_TYPES.COUNTDOWN_SRV:
             print("Countdown: ", msg_payload)
+            print(f"You are: {self.game_model.get_my_x_pos()}")
+            self.game_view.show_player_position(self.game_model.get_my_x_pos())
             self.game_view.show_countdown(msg_payload)
 
         elif msg_type == MSG_TYPES.GAME_UPDATE_SRV:

@@ -1,45 +1,46 @@
 import turtle
 import sys
 sys.path.insert(0, './src/Utility')
-from config import POS_TYPES, SCREEN_CONFIG, PADDLE_CONFIG
+from config import POS_TYPES, SCREEN_CONFIG, PADDLE_CONFIG, PLAYER_COLORS
 class View():
     """ View class """
 
     def __init__(self) -> None:
-        self.my_pad, self.op_pad = self.create_paddles()
+        self.left_pad, self.right_pad = self.create_paddles()
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
-        self.my_sc_board = self.create_scoreboard(POS_TYPES.LEFT)
-        self.op_sc_board = self.create_scoreboard(POS_TYPES.RIGHT)
+        self.left_sc_board = self.create_scoreboard(POS_TYPES.LEFT)
+        self.right_sc_board = self.create_scoreboard(POS_TYPES.RIGHT)
         self.countdown = self.create_countdown()
+        self.player_position = self.create_player_position() # change color later?
 
 
     def create_paddles(self):
         """Create the paddle"""
-        my_pad = turtle.Turtle()
-        my_pad.speed(0)
-        my_pad.shape("square")
-        my_pad.color("red")
-        my_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
-        my_pad.penup()
-        my_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
+        left_pad = turtle.Turtle()
+        left_pad.speed(0)
+        left_pad.shape("square")
+        left_pad.color("white smoke")
+        left_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
+        left_pad.penup()
+        left_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
 
-        op_pad = turtle.Turtle()
-        op_pad.speed(0)
-        op_pad.shape("square")
-        op_pad.color("blue")
-        op_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
-        op_pad.penup()
-        op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
+        right_pad = turtle.Turtle()
+        right_pad.speed(0)
+        right_pad.shape("square")
+        right_pad.color("white smoke")
+        right_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
+        right_pad.penup()
+        right_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
 
-        return my_pad, op_pad
+        return left_pad, right_pad
     
     def create_ball(self):
         """Create the ball"""
         hit_ball = turtle.Turtle()
         hit_ball.speed(0)
-        hit_ball.shape("circle")
-        hit_ball.color("medium spring green")
+        hit_ball.shape("square")
+        hit_ball.color("lime")
         hit_ball.penup()
         hit_ball.goto(0, 0)
         hit_ball.dx = 5
@@ -70,23 +71,19 @@ class View():
         
         return sc
     
-    def create_scoreboard(self, player):
+    def create_scoreboard(self, y_pos):
         """Create the scoreboard"""
-        color = ""
         x = 0
         font_size = 50
         
-        if (player == POS_TYPES.LEFT):
-            color = "red"
+        if (y_pos == POS_TYPES.LEFT):
             x = -font_size*2
         else:
-            color = "blue"
-            x = font_size
+            x = font_size*1.275
 
-        
         sketch = turtle.Turtle()
         sketch.speed(0)
-        sketch.color(color)
+        sketch.color("white smoke")
         sketch.penup()
         sketch.hideturtle()
         sketch.goto(x, 200)
@@ -116,6 +113,28 @@ class View():
             self.countdown.color("red")
         self.countdown.write(f"{countdown}",
                      align="center", font=("Courier", 200, "bold"))
+    
+    def show_player_position(self, x_pos: str):
+        color = ""
+        if (x_pos == POS_TYPES.LEFT):
+            color = "red"
+        else: color = "blue"
+
+        self.player_position.color(color)
+        self.player_position.write(f"You are {color}", align="center", font=("Courier", 50, "bold"))
+    
+    def clear_player_position(self):
+        """clears the player position notification"""
+        self.player_position.clear()
+
+    def create_player_position(self):
+        """Create player position"""
+        player_position = turtle.Turtle()
+        player_position.speed(0)
+        player_position.penup()
+        player_position.hideturtle()
+        player_position.goto(0, -200)
+        return player_position
         
     def show_winner(self, winner: str):
         """Show winner"""
@@ -127,37 +146,53 @@ class View():
     def clear_countdown(self):
         """Clear countdown"""
         self.countdown.clear()
+    
+    def update_score_boards(self, my_x_pos, my_score, op_score):
+        """update score boards"""
+        self.left_sc_board.clear()
+        self.right_sc_board.clear()
+        if (my_x_pos == POS_TYPES.RIGHT):
+            self.right_sc_board.write(f"{my_score}", font=("Courier", 50, "normal"))
+            self.left_sc_board.write(f"{op_score}", font=("Courier", 50, "normal"))
+        else:
+            self.left_sc_board.write(f"{my_score}", font=("Courier", 50, "normal"))
+            self.right_sc_board.write(f"{op_score}", font=("Courier", 50, "normal"))
+    
+    def update_positions (self, my_x_pos, my_y, op_y, ball_pos):
+        """update positions"""
+        if (my_x_pos == POS_TYPES.RIGHT):
+            self.left_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
+            self.right_pad.goto(SCREEN_CONFIG.LEFT_X, op_y)
+        else:
+            self.left_pad.goto(SCREEN_CONFIG.LEFT_X, my_y)
+            self.right_pad.goto(SCREEN_CONFIG.RIGHT_X, op_y)
+        self.hit_ball.goto(*ball_pos)
+
+    def set_player_colors(self):
+        """set colors when side is chosen"""
+        self.left_pad.color(PLAYER_COLORS.LEFT_PLAYER_COLOR)
+        self.right_pad.color(PLAYER_COLORS.RIGHT_PLAYER_COLOR)
+        self.left_sc_board.color(PLAYER_COLORS.LEFT_PLAYER_COLOR)
+        self.right_sc_board.color(PLAYER_COLORS.RIGHT_PLAYER_COLOR)
+
 
     def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_x_pos : str, my_score: int, op_score: int, update_score : bool):
         """Update the view"""
-        if (my_x_pos == POS_TYPES.RIGHT):
-            self.my_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
-            self.op_pad.goto(SCREEN_CONFIG.LEFT_X, op_y)
-        else:
-            self.my_pad.goto(SCREEN_CONFIG.LEFT_X, my_y)
-            self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, op_y)
-        self.hit_ball.goto(*ball_pos)
+        self.update_positions(my_x_pos, my_y, op_y, ball_pos)
     
         if update_score:
-            self.my_sc_board.clear()
-            self.op_sc_board.clear()
-            if (my_x_pos == POS_TYPES.RIGHT):
-                self.my_sc_board.write(f"{my_score}", font=("Courier", 50, "normal"))
-                self.op_sc_board.write(f"{op_score}", font=("Courier", 50, "normal"))
-            else:
-                self.my_sc_board.write(f"{op_score}", font=("Courier", 50, "normal"))
-                self.op_sc_board.write(f"{my_score}", font=("Courier", 50, "normal"))
+            self.update_score_boards(my_x_pos, my_score, op_score)
 
         self.sc.update()
 
     def reset_view(self):
         """Reset the view"""
-        self.my_sc_board.clear()
-        self.op_sc_board.clear()
-        self.my_sc_board.write("0", font=("Courier", 50, "normal"))
-        self.op_sc_board.write("0", font=("Courier", 50, "normal"))
-        self.my_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
-        self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
+        self.left_sc_board.clear()
+        self.right_sc_board.clear()
+        self.left_sc_board.write("0", font=("Courier", 50, "normal"))
+        self.right_sc_board.write("0", font=("Courier", 50, "normal"))
+        self.left_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
+        self.right_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
         self.hit_ball.goto(0, 0)
         self.show_winner("")
         self.sc.update()
