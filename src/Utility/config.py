@@ -52,6 +52,7 @@ class BALL_CONFIG():
 class PLAYER_COLORS():
     LEFT_PLAYER_COLOR = "red"
     RIGHT_PLAYER_COLOR = "blue"
+    IDLE_COLOR = "white smoke"
 # types
 KEY_UP = "KEY_UP"
 KEY_DOWN = "KEY_DOWN"

@@ -74,7 +74,7 @@ class Game():
         """Handle the message"""
         # TODO: update model!
         msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
-        print("Player received message: ", msg)
+        # print("Player received message: ", msg)
         if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
             self.game_model.set_my_x_pos(msg_payload)
@@ -83,6 +83,7 @@ class Game():
 
         elif msg_type == MSG_TYPES.GAME_CAN_START_SRV:
             # start game
+            print("Recieved start game")
             self.game_is_on = True
             self.game_view.clear_countdown()
             self.game_view.clear_player_position()

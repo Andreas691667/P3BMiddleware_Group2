@@ -6,5 +6,6 @@ if __name__ == "__main__":
 
     up = sys.argv[1]
     down = sys.argv[2]
+
     game = Game(up, down)
    

@@ -7,33 +7,30 @@ class View():
 
     def __init__(self) -> None:
         self.left_pad, self.right_pad = self.create_paddles()
+        self.left_sc_board, self.right_sc_board = self.create_scoreboards()
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
-        self.left_sc_board = self.create_scoreboard(POS_TYPES.LEFT)
-        self.right_sc_board = self.create_scoreboard(POS_TYPES.RIGHT)
         self.countdown = self.create_countdown()
         self.player_position = self.create_player_position() # change color later?
 
-
     def create_paddles(self):
         """Create the paddle"""
-        left_pad = turtle.Turtle()
-        left_pad.speed(0)
-        left_pad.shape("square")
-        left_pad.color("white smoke")
-        left_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
-        left_pad.penup()
-        left_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
+        left = self.create_paddle(PLAYER_COLORS.IDLE_COLOR, SCREEN_CONFIG.LEFT_X)
+        right = self.create_paddle(PLAYER_COLORS.IDLE_COLOR, SCREEN_CONFIG.RIGHT_X)
 
-        right_pad = turtle.Turtle()
-        right_pad.speed(0)
-        right_pad.shape("square")
-        right_pad.color("white smoke")
-        right_pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
-        right_pad.penup()
-        right_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
-
-        return left_pad, right_pad
+        return left, right
+    
+    def create_paddle(self, color: str, x_pos: int):
+        """Create the paddle"""
+        pad = turtle.Turtle()
+        pad.speed(0)
+        pad.shape("square")
+        pad.color(color)
+        pad.shapesize(stretch_wid=PADDLE_CONFIG.PADDLE_HEIGHT, stretch_len=PADDLE_CONFIG.PADDLE_WIDTH)
+        pad.penup()
+        pad.goto(x_pos, 0)
+        return pad
+    
     
     def create_ball(self):
         """Create the ball"""
@@ -71,24 +68,22 @@ class View():
         
         return sc
     
-    def create_scoreboard(self, y_pos):
+    def create_scoreboard(self, color, x):
         """Create the scoreboard"""
-        x = 0
-        font_size = 50
-        
-        if (y_pos == POS_TYPES.LEFT):
-            x = -font_size*2
-        else:
-            x = font_size*1.275
-
         sketch = turtle.Turtle()
         sketch.speed(0)
-        sketch.color("white smoke")
+        sketch.color(color)
         sketch.penup()
         sketch.hideturtle()
         sketch.goto(x, 200)
-        sketch.write("0", font=("Courier", font_size, "normal"))
+        sketch.write("0", font=("Courier", 50, "normal"))
         return sketch
+    
+    def create_scoreboards(self):
+        left = self.create_scoreboard(PLAYER_COLORS.IDLE_COLOR, -100)
+        right = self.create_scoreboard(PLAYER_COLORS.IDLE_COLOR, 60)
+        return left, right
+        
     
     def create_countdown(self):
         """Create the countdown"""
@@ -157,23 +152,31 @@ class View():
         else:
             self.left_sc_board.write(f"{my_score}", font=("Courier", 50, "normal"))
             self.right_sc_board.write(f"{op_score}", font=("Courier", 50, "normal"))
+        self.sc.update()
     
     def update_positions (self, my_x_pos, my_y, op_y, ball_pos):
         """update positions"""
         if (my_x_pos == POS_TYPES.RIGHT):
-            self.left_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
-            self.right_pad.goto(SCREEN_CONFIG.LEFT_X, op_y)
+            self.left_pad.goto(SCREEN_CONFIG.LEFT_X, op_y)
+            self.right_pad.goto(SCREEN_CONFIG.RIGHT_X, my_y)
         else:
             self.left_pad.goto(SCREEN_CONFIG.LEFT_X, my_y)
             self.right_pad.goto(SCREEN_CONFIG.RIGHT_X, op_y)
+
         self.hit_ball.goto(*ball_pos)
 
+   
     def set_player_colors(self):
         """set colors when side is chosen"""
-        self.left_pad.color(PLAYER_COLORS.LEFT_PLAYER_COLOR)
-        self.right_pad.color(PLAYER_COLORS.RIGHT_PLAYER_COLOR)
+        # Set score board colors 
         self.left_sc_board.color(PLAYER_COLORS.LEFT_PLAYER_COLOR)
         self.right_sc_board.color(PLAYER_COLORS.RIGHT_PLAYER_COLOR)
+        self.update_score_boards(POS_TYPES.LEFT, 0, 0)
+
+        # Set paddle colors
+        self.left_pad.color(PLAYER_COLORS.LEFT_PLAYER_COLOR)
+        self.right_pad.color(PLAYER_COLORS.RIGHT_PLAYER_COLOR)
+            
 
 
     def update_view(self, my_y: int, op_y: int, ball_pos: (int, int), my_x_pos : str, my_score: int, op_score: int, update_score : bool):
