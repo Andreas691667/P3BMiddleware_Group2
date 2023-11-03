@@ -177,7 +177,7 @@ class Server():
         """State thread"""
         # Get message
         while not self.state_thread_stop_event.is_set():
-            if self.game_is_on:           
+            while self.game_is_on:
                 # Check for collision
                 self.calculate_ball_pos()
                 ball_state, payload = collision.determine_game_state(self.ball_pos,
@@ -231,7 +231,16 @@ class Server():
                    
                     self.send_message(update_msg, player_id)
            
-            time.sleep(1/self.refresh_rate)
+                time.sleep(1/self.refresh_rate)
+            
+            if (self.winner != ""):
+                print("Game finished!")
+                self.y_positions.clear()
+                self.x_positions.clear()
+                self.left_score = 0
+                self.right_score = 0
+                self.ball_pos = (0, 0)
+                self.winner = ""
 
 
     

@@ -23,6 +23,7 @@ class Game():
         self.game_is_on: bool = False
         self.key_up : str = key_up
         self.key_down : str = key_down
+        self.key_restart : str = key_down
         self.refresh_rate: int = 10
         self.change_score = False
         self.game_finished : bool = False
@@ -38,6 +39,14 @@ class Game():
 
     def start_game(self):
         """Start the game loop when accepted by server"""
+        # initialize game
+        self.initialize_game()
+
+        # start game by running main game loop
+        self.main_game_loop()
+    
+    def initialize_game(self):
+        """Initialize the game"""
         # send new player msg to the server
         new_player_msg = message_parsing.encode_message(
             MSG_TYPES.NEW_PLAYER_USR, self.player_id, "")
@@ -56,9 +65,6 @@ class Game():
             # if yes, set opponent position and own position
             msg = self.incoming_message_queue.get()
             self.handle_message(msg)
-
-        # start game
-        self.main_game_loop()
 
     def on_message(self, ch, method, properties, body):
         """Callback function for when a message is received
@@ -139,7 +145,7 @@ class Game():
                                         self.game_model.get_op_score(),
                                         self.change_score
                                        )
-            # Reset
+            # Reset change score flag
             self.change_score = False
 
             # check if game has finished
@@ -155,7 +161,26 @@ class Game():
                                                     self.player_id,
                                                     dt)))
             
-            # time.sleep(1/self.refresh_rate)
+        self.stop_game()
+
+    def stop_game(self):
+        """Stop the game and wait for restart"""
+
+        # ---- RESET GAME ----
+        self.game_finished = False
+        self.game_view.show_restart_msg()
+
+        # ---- WAIT FOR NEW GAME ----
+
+        # wait until space 
+        while not keyboard.is_pressed(self.key_restart):
+            pass
+
+        self.winner = ""
+        self.game_view.reset_view()
+
+        # when space is pressed, init game
+        self.start_game()
 
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY""" 

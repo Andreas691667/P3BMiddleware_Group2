@@ -159,5 +159,14 @@ class View():
         self.my_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
         self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
         self.hit_ball.goto(0, 0)
-        self.show_winner("")
+        self.countdown.clear()
+        self.countdown.write("Waiting for game to start...",
+                        align="center", font=("Courier", 30, "normal"))
         self.sc.update()
+
+    def show_restart_msg(self):
+        """Show restart message"""
+        self.countdown.clear()
+        self.countdown.color("green")
+        self.countdown.write("Press your down button to play again...",
+                     align="center", font=("Courier", 30, "normal"))
