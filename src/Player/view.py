@@ -133,9 +133,10 @@ class View():
         
     def show_winner(self, winner: str):
         """Show winner"""
+        winning_color = PLAYER_COLORS.LEFT_PLAYER_COLOR if winner == POS_TYPES.LEFT else PLAYER_COLORS.RIGHT_PLAYER_COLOR
         self.countdown.clear()
-        self.countdown.color("green")
-        self.countdown.write(f"{winner} player won!",
+        self.countdown.color(winning_color)
+        self.countdown.write(f"{winning_color} won!",
                      align="center", font=("Courier", 50, "bold"))
         
     def clear_countdown(self):
