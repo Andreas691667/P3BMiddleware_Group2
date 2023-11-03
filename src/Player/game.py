@@ -8,6 +8,7 @@ from model import Model
 from view import View
 from client import Client
 from queue import Queue
+from threading import Event
 import random
 import time
 
@@ -17,7 +18,7 @@ class Game():
     def __init__(self, key_up : str, key_down : str) -> None:
         self.set_player_id()
         self.client = Client(self.on_message, self.player_id)
-        self.game_view = View()
+        self.game_view = View(key_up, key_down)
         self.game_model = Model()
         self.incoming_message_queue = Queue()
         self.game_is_on: bool = False
@@ -28,6 +29,7 @@ class Game():
         self.change_score = False
         self.game_finished : bool = False
         self.winner : str = ""
+        self.stop_main_loop = Event()
 
         self.start_game()
 
@@ -39,9 +41,10 @@ class Game():
 
     def start_game(self):
         """Start the game loop when accepted by server"""
-        # initialize game
+        # initialize game by asking game server
         self.initialize_game()
 
+        # when game is initialized (ack by server),
         # start game by running main game loop
         self.main_game_loop()
     
@@ -80,7 +83,7 @@ class Game():
         """Handle the message"""
         # TODO: update model!
         msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
-        print("Player received message: ", msg)
+        # print("Player received message: ", msg)
         if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
             self.game_model.set_my_x_pos(msg_payload)
@@ -124,44 +127,45 @@ class Game():
 
     def main_game_loop(self):
         """The main game loop"""
-        while self.game_is_on:
+        while not self.stop_main_loop.is_set():
+            while self.game_is_on:
 
-            # ---- UPDATE OPPONENTS PADDLE & BALL POSITION ----
-            # Check queue for incoming messages
-            if not self.incoming_message_queue.empty():
-                msg = self.incoming_message_queue.get()
-                self.handle_message(msg)
+                # ---- UPDATE OPPONENTS PADDLE & BALL POSITION ----
+                # Check queue for incoming messages
+                if not self.incoming_message_queue.empty():
+                    msg = self.incoming_message_queue.get()
+                    self.handle_message(msg)
 
-            # ---- UPDATE MY PADDLE ----
-            # Get user input
-            dt = self.get_user_input()
+                # ---- UPDATE MY PADDLE ----
+                # Get user input
+                dt = self.get_user_input()
 
-            # ---- UPDATE VIEW ----
-            self.game_view.update_view(self.game_model.get_my_y_pos(),
-                                       self.game_model.get_op_y_pos(),
-                                       self.game_model.get_ball_pos(),
-                                       self.game_model.get_my_x_pos(),
-                                        self.game_model.get_my_score(),
-                                        self.game_model.get_op_score(),
-                                        self.change_score
-                                       )
-            # Reset change score flag
-            self.change_score = False
+                # ---- UPDATE VIEW ----
+                self.game_view.update_view(self.game_model.get_my_y_pos(),
+                                        self.game_model.get_op_y_pos(),
+                                        self.game_model.get_ball_pos(),
+                                        self.game_model.get_my_x_pos(),
+                                            self.game_model.get_my_score(),
+                                            self.game_model.get_op_score(),
+                                            self.change_score
+                                        )
+                # Reset change score flag
+                self.change_score = False
 
-            # check if game has finished
-            if self.game_finished:
-                self.game_view.show_winner(self.winner)
-                self.game_is_on = False
-                break
+                # check if game has finished
+                if self.game_finished:
+                    self.game_view.show_winner(self.winner)
+                    self.game_is_on = False
+                    break
 
-            if dt != 0:
-                # ---- PUBLISH USER UPDATE ----
-                self.client.send_message(
-                    (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR,
-                                                    self.player_id,
-                                                    dt)))
-            
-        self.stop_game()
+                if dt != 0:
+                    # ---- PUBLISH USER UPDATE ----
+                    self.client.send_message(
+                        (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR,
+                                                        self.player_id,
+                                                        dt)))
+                
+            self.stop_game()
 
     def stop_game(self):
         """Stop the game and wait for restart"""
@@ -171,16 +175,26 @@ class Game():
         self.game_view.show_restart_msg()
 
         # ---- WAIT FOR NEW GAME ----
+        # wait until key is pressed
+        restart_game : bool = False
+        while True:
+            if keyboard.is_pressed(self.key_down):
+                restart_game = True
+                break
+            
+            elif keyboard.is_pressed(self.key_up):
+                print("Exiting game...")
+                self.stop_main_loop.set()
+                # self.client # TODO: close connection
+                self.game_view.close_screen()
+                sys.exit(0)
 
-        # wait until space 
-        while not keyboard.is_pressed(self.key_restart):
-            pass
-
-        self.winner = ""
-        self.game_view.reset_view()
-
-        # when space is pressed, init game
-        self.start_game()
+        if restart_game:
+            print("Restarting game...")
+            self.winner = ""
+            self.game_view.reset_view()
+            # when space is pressed, init game
+            self.initialize_game()
 
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY""" 

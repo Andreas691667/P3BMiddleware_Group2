@@ -5,7 +5,9 @@ from config import POS_TYPES, SCREEN_CONFIG, PADDLE_CONFIG
 class View():
     """ View class """
 
-    def __init__(self) -> None:
+    def __init__(self, key_up, key_down) -> None:
+        self.key_up = key_up
+        self.key_down = key_down
         self.my_pad, self.op_pad = self.create_paddles()
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
@@ -101,7 +103,7 @@ class View():
         countdown.penup()
         countdown.hideturtle()
         countdown.goto(0, 0)
-        countdown.write("Waiting for game to start...",
+        countdown.write(f"Waiting for game to start... \n Go up on '{self.key_up}' and down on '{self.key_down}'",
                         align="center", font=("Courier", 30, "normal"))
         return countdown
     
@@ -160,7 +162,7 @@ class View():
         self.op_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
         self.hit_ball.goto(0, 0)
         self.countdown.clear()
-        self.countdown.write("Waiting for game to start...",
+        self.countdown.write(f"Waiting for game to start... \n Go up on '{self.key_up}' and down on '{self.key_down}'",
                         align="center", font=("Courier", 30, "normal"))
         self.sc.update()
 
@@ -168,5 +170,9 @@ class View():
         """Show restart message"""
         self.countdown.clear()
         self.countdown.color("green")
-        self.countdown.write("Press your down button to play again...",
+        self.countdown.write(f"Press '{self.key_down}' to play again... \n Press '{self.key_up}' to quit.",
                      align="center", font=("Courier", 30, "normal"))
+        
+    def close_screen(self):
+        """Close the screen"""
+        self.sc.bye()
