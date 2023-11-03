@@ -28,7 +28,7 @@ class Game():
         self.game_finished : bool = False
         self.winner : str = ""
 
-        self.initialize_game()
+        self.start_game()
 
     def set_player_id(self):
         """Generate a unique player id randomly"""
@@ -36,11 +36,12 @@ class Game():
         random.seed(time_ns)
         self.player_id = random.randint(0, 1000000)
 
-    def initialize_game(self):
+    def start_game(self):
         """Start the game loop when accepted by server"""
         # send new player msg to the server
         new_player_msg = message_parsing.encode_message(
             MSG_TYPES.NEW_PLAYER_USR, self.player_id, "")
+        
         self.client.send_message(new_player_msg)
 
         print("Waiting for game to start...")
@@ -57,20 +58,7 @@ class Game():
             self.handle_message(msg)
 
         # start game
-        self.start_game()
-
-
-    def start_game(self):
-        while True:
-            self.main_game_loop()
-            # wait for key press to restart game
-            while not keyboard.is_pressed("space"):
-                pass
-            self.game_finished = False
-            self.game_view.reset_view()
-            break
-        self.initialize_game()
-
+        self.main_game_loop()
 
     def on_message(self, ch, method, properties, body):
         """Callback function for when a message is received
