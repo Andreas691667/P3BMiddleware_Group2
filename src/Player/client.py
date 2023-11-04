@@ -57,35 +57,6 @@ class Client():
         self.outgoing_channel.exchange_declare(
             exchange=RMQ_CONFIG.USER_EXCHANGE, exchange_type='fanout')
 
-    # def configure_client(self, on_message_clb, player_id):
-    #     """Configure the client"""
-    #     # The connection object
-    #     self.connection = pika.BlockingConnection(
-    #         pika.ConnectionParameters(host=RMQ_CONFIG.SERVER_IP, port=RMQ_CONFIG.SERVER_PORT))
-
-    #     # The channel object
-    #     self.channel = self.connection.channel()
-
-    #     # Declare the exchanges
-    #     self.channel.exchange_declare(
-    #         exchange=RMQ_CONFIG.SERVER_EXCHANGE, exchange_type='direct')  # for incoming messages
-
-    #     self.channel.exchange_declare(
-    #         exchange=RMQ_CONFIG.USER_EXCHANGE, exchange_type='fanout')  # for outgoing messages
-
-    #     # Declare the queue (Name is generated uniquely by RMQ)
-    #     # Incoming message queue
-    #     result = self.channel.queue_declare(queue='', exclusive=True)
-    #     self.incoming_message_queue = result.method.queue
-
-    #     # Bind the queue to the exchange
-    #     self.channel.queue_bind(
-    #         exchange=RMQ_CONFIG.SERVER_EXCHANGE, queue=self.incoming_message_queue, routing_key=str(player_id))
-
-    #     # Create a consumer for the incoming message queue
-    #     self.channel.basic_consume(
-    #         queue=self.incoming_message_queue, on_message_callback=on_message_clb, auto_ack=True)
-
     def start_consuming(self):
         """Start consuming messages
         This function runs in a thread"""
