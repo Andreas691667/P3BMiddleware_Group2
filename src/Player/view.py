@@ -4,17 +4,12 @@ sys.path.insert(0, './src/Utility')
 from config import POS_TYPES, SCREEN_CONFIG, PADDLE_CONFIG, PLAYER_COLORS
 class View():
     """ View class """
-
-<<<<<<< HEAD
-    def __init__(self) -> None:
+        
+    def __init__(self, key_up, key_down) -> None:
         self.left_pad, self.right_pad = self.create_paddles()
         self.left_sc_board, self.right_sc_board = self.create_scoreboards()
-=======
-    def __init__(self, key_up, key_down) -> None:
         self.key_up = key_up
         self.key_down = key_down
-        self.my_pad, self.op_pad = self.create_paddles()
->>>>>>> origin/restart_impl
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
         self.countdown = self.create_countdown()
