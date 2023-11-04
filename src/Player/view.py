@@ -5,9 +5,16 @@ from config import POS_TYPES, SCREEN_CONFIG, PADDLE_CONFIG, PLAYER_COLORS
 class View():
     """ View class """
 
+<<<<<<< HEAD
     def __init__(self) -> None:
         self.left_pad, self.right_pad = self.create_paddles()
         self.left_sc_board, self.right_sc_board = self.create_scoreboards()
+=======
+    def __init__(self, key_up, key_down) -> None:
+        self.key_up = key_up
+        self.key_down = key_down
+        self.my_pad, self.op_pad = self.create_paddles()
+>>>>>>> origin/restart_impl
         self.hit_ball = self.create_ball()
         self.sc = self.create_screen()
         self.countdown = self.create_countdown()
@@ -93,7 +100,7 @@ class View():
         countdown.penup()
         countdown.hideturtle()
         countdown.goto(0, 0)
-        countdown.write("Waiting for game to start...",
+        countdown.write(f"Waiting for game to start... \n Go up on '{self.key_up}' and down on '{self.key_down}'",
                         align="center", font=("Courier", 30, "normal"))
         return countdown
     
@@ -198,5 +205,18 @@ class View():
         self.left_pad.goto(SCREEN_CONFIG.LEFT_X, 0)
         self.right_pad.goto(SCREEN_CONFIG.RIGHT_X, 0)
         self.hit_ball.goto(0, 0)
-        self.show_winner("")
+        self.countdown.clear()
+        self.countdown.write(f"Waiting for game to start... \n Go up on '{self.key_up}' and down on '{self.key_down}'",
+                        align="center", font=("Courier", 30, "normal"))
         self.sc.update()
+
+    def show_restart_msg(self):
+        """Show restart message"""
+        self.countdown.clear()
+        self.countdown.color("green")
+        self.countdown.write(f"Press '{self.key_down}' to play again... \n Press '{self.key_up}' to quit.",
+                     align="center", font=("Courier", 30, "normal"))
+        
+    def close_screen(self):
+        """Close the screen"""
+        self.sc.bye()
