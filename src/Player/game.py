@@ -30,9 +30,32 @@ class Game():
         self.game_finished : bool = False
         self.winner : str = ""
         self.stop_main_loop = Event()
+        self.msg_send_times : dict[int, int] = {}
+        self.latest_send_msg_id: int = -1
+
+        # measurement
+        self.message_count = 0
+        self.msg_data: list[tuple[int, int]] = [] # (msg_id, time_in_ns) 
+        self.key_stroke_log: list[(str, int)] = []
 
         self.start_game()
 
+    def add_msg_data (self, msg_id, time):
+        """d"""
+        self.msg_data.append((msg_id, time))
+    
+    def get_msg_data (self) -> list:
+        """d"""
+        return self.msg_data
+    
+    def add_keystroke (self, key, time):
+        """d"""
+        self.key_stroke_log.append((key, time))
+    
+    def get_key_strokes_data (self) -> list:
+        """d"""
+        return self.key_stroke_log
+    
     def set_player_id(self):
         """Generate a unique player id randomly"""
         time_ns = time.time_ns()
@@ -52,7 +75,7 @@ class Game():
         """Initialize the game"""
         # send new player msg to the server
         new_player_msg = message_parsing.encode_message(
-            MSG_TYPES.NEW_PLAYER_USR, self.player_id, "")
+            MSG_TYPES.NEW_PLAYER_USR, self.player_id, self.calculate_msg_id(), "")
         
         self.client.send_message(new_player_msg)
 
@@ -82,7 +105,7 @@ class Game():
     def handle_message(self, msg):
         """Handle the message"""
         # TODO: update model!
-        msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
+        msg_type, sender_id, msg_id, msg_payload = message_parsing.decode_message(msg)
         # print("Player received message: ", msg)
         if msg_type == MSG_TYPES.PLAYER_POSITION_INIT_SRV:
             # set opponent position and own position
@@ -108,9 +131,24 @@ class Game():
             ball_pos = msg_payload["ball_pos"]
             op_y_pos = msg_payload["op_y_pos"]
             my_y_pos = msg_payload["my_y_pos"]
+            op_y_pos_msg_id = msg_payload["op_y_pos_msg_id"] 
+            my_y_pos_msg_id = msg_payload["my_y_pos_msg_id"] 
             left_score = msg_payload["left_score"]
             right_score = msg_payload["right_score"]
             game_finished = msg_payload["game_finished"]
+
+            # Set message ID in model if it have changed
+            if (self.game_model.get_my_latest_msg_id() != my_y_pos_msg_id):
+                print(f"Recieved my msg: {my_y_pos_msg_id}")
+                self.game_model.set_my_latest_msg_id(my_y_pos_msg_id)
+                # Calculate traversel time
+                time_traversed = (time.time_ns() - self.msg_send_times[my_y_pos_msg_id])/10**6
+                self.add_msg_data(my_y_pos_msg_id, time_traversed)
+
+            if (self.game_model.get_op_latest_msg_id() != op_y_pos_msg_id):
+                print(f"Recieved op msg: {op_y_pos_msg_id}")
+                self.game_model.set_op_latest_msg_id(op_y_pos_msg_id)
+
 
             my_score = left_score if self.game_model.my_x_pos == POS_TYPES.LEFT else right_score
             op_score = left_score if self.game_model.my_x_pos == POS_TYPES.RIGHT else right_score
@@ -118,7 +156,7 @@ class Game():
             # Evaluate if score have changed
             if (my_score != self.game_model.get_my_score() or op_score != self.game_model.get_op_score()):
                 self.change_score = True
-
+            
             self.game_model.set_my_y_pos(my_y_pos)
             self.game_model.set_op_y_pos(op_y_pos)
             self.game_model.set_ball_pos(ball_pos)
@@ -129,7 +167,15 @@ class Game():
                 self.game_finished = True
                 self.winner = game_finished[1]
                 print("Game finished!", game_finished)
+                print(self.get_msg_data())
+                print([t for id, t in self.get_msg_data()])
                 
+    def calculate_msg_id (self):
+        """calculates message id"""
+        self.message_count += 1
+        self.latest_send_msg_id = int(str(self.player_id) + str(self.message_count))
+        return self.latest_send_msg_id
+    
 
     def main_game_loop(self):
         """The main game loop"""
@@ -169,7 +215,9 @@ class Game():
                     self.client.send_message(
                         (message_parsing.encode_message(MSG_TYPES.PLAYER_UPDATE_USR,
                                                         self.player_id,
+                                                        self.calculate_msg_id(),
                                                         dt)))
+                    self.msg_send_times.update({self.latest_send_msg_id: time.time_ns()})
                 
             self.stop_game()
 
@@ -205,8 +253,10 @@ class Game():
     def get_user_input(self) -> str:
         """Returns KEY_DOWN, KEY_UP or NO_KEY""" 
         if (keyboard.is_pressed(self.key_up)):
+            self.add_keystroke(self.key_up, time.time_ns()/10**6)
             return 10
         elif (keyboard.is_pressed(self.key_down)):
+            self.add_keystroke(self.key_down, time.time_ns()/10**6)
             return -10
         else:
             return 0

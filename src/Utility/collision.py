@@ -35,16 +35,16 @@ def paddle_collision(ball_pos: (int, int), left_pos: int, right_pos: int) -> BAL
     """Determine if the ball has collided with a paddle"""
     ball_x = ball_pos[0]
     ball_y = ball_pos[1]
-    a = 40
+    MC = 40 # accronym, can you guess the meaning? :o
     if (ball_x <= SCREEN_CONFIG.LEFT_X + PADDLE_CONFIG.PADDLE_WIDTH/2 + 3
         and ball_x >= SCREEN_CONFIG.LEFT_X - PADDLE_CONFIG.PADDLE_WIDTH/2 - 3):
-        if (ball_y >= left_pos - PADDLE_CONFIG.PADDLE_HEIGHT/2 - a
-            and ball_y <= left_pos + PADDLE_CONFIG.PADDLE_HEIGHT/2 + a):
+        if (ball_y >= left_pos - PADDLE_CONFIG.PADDLE_HEIGHT/2 - MC
+            and ball_y <= left_pos + PADDLE_CONFIG.PADDLE_HEIGHT/2 + MC):
             return BALL_STATE.PADDLE_COLLISION
     elif (ball_x >= SCREEN_CONFIG.RIGHT_X - PADDLE_CONFIG.PADDLE_WIDTH/2 - 3
           and ball_x <= SCREEN_CONFIG.RIGHT_X + PADDLE_CONFIG.PADDLE_WIDTH/2 + 3):
-        if (ball_y >= right_pos - PADDLE_CONFIG.PADDLE_HEIGHT/2 - a 
-            and ball_y <= right_pos + PADDLE_CONFIG.PADDLE_HEIGHT/2 + a):
+        if (ball_y >= right_pos - PADDLE_CONFIG.PADDLE_HEIGHT/2 - MC 
+            and ball_y <= right_pos + PADDLE_CONFIG.PADDLE_HEIGHT/2 + MC):
             return BALL_STATE.PADDLE_COLLISION
     else:
         return None

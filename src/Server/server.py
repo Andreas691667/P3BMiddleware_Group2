@@ -22,6 +22,7 @@ class Server():
         # Model variables
         self.x_positions: dict[int, str] = {}  # player_id : int => x_pos : str (LEFT or RIGHT)
         self.y_positions: dict[int, int] = {}  # player_id : int => y_pos : int
+        self.latest_msg_ids: dict[int, int] = {} #player_id: int => msg_id : int
         self.ball_pos: (int, int) = (0, 0)
         self.d_ball: (int, int) = (BALL_CONFIG.MAX_BALL_SPEED, BALL_CONFIG.MAX_BALL_SPEED)
         self.refresh_rate: int = 10
@@ -29,6 +30,7 @@ class Server():
         self.right_score: int = 0
         self.winner: str = ""
         self.winning_score = 2
+        self.svr_msg_id = 0
 
         self.consumer_thread = Thread(target=self.start_consuming)
         self.state_thread = Thread(target=self.state_thread_fun)
@@ -90,14 +92,15 @@ class Server():
         else:
             self.x_positions[player_id] = POS_TYPES.RIGHT
 
-        # if two players have joined, initialize y pos and the game can start (return true)
+        # if two players have joined, initialize y-pos and msg_ids and the game can start (return true)
         if len(self.x_positions) == 2:
             self.y_positions = {player_id: 0 for player_id in self.x_positions}
+            self.latest_msg_ids = {player_id: -1 for player_id in self.x_positions}
             return True
         else:
             return False
 
-    def update_player_y_position(self, player_id, new_y_pos):
+    def update_player_model(self, player_id, msg_id, new_y_pos):
         """Update the player's position
         player_id: The id of the player to update
         new_pos: The new position of the player
@@ -106,19 +109,24 @@ class Server():
         # Update position of player that sent message
         self.mutex.acquire()
         self.y_positions[player_id] += new_y_pos
+        self.latest_msg_ids[player_id] = msg_id
         self.mutex.release()
 
+    def calculate_msg_id (self):
+        """calculate msg id for server"""
+        self.svr_msg_id += 1
+        return self.svr_msg_id
 
     def handle_message(self, msg):
         """Handle the message
         msg: The message to handle in json format"""
-        msg_type, sender_id, msg_payload = message_parsing.decode_message(msg)
+        msg_type, sender_id, msg_id, msg_payload = message_parsing.decode_message(msg)
 
         if msg_type == MSG_TYPES.NEW_PLAYER_USR:
             game_can_start : bool = self.assign_player_x_position(sender_id)
             # send player position to back to player
             player_pos_msg = message_parsing.encode_message(
-                MSG_TYPES.PLAYER_POSITION_INIT_SRV, sender_id, self.x_positions[sender_id])
+                MSG_TYPES.PLAYER_POSITION_INIT_SRV, sender_id, self.calculate_msg_id(), self.x_positions[sender_id])
             self.send_message(player_pos_msg, sender_id)
 
             if game_can_start:
@@ -126,20 +134,21 @@ class Server():
                 for i in range(3, 0, -1):
                     for player_id in self.x_positions:
                         countdown_msg = message_parsing.encode_message(
-                            MSG_TYPES.COUNTDOWN_SRV, player_id, i)
+                            MSG_TYPES.COUNTDOWN_SRV, player_id, self.calculate_msg_id(), i)
                         self.send_message(countdown_msg, player_id)
                     time.sleep(1)
 
                 # start game
                 for player_id in self.x_positions:
                     game_can_start_msg = message_parsing.encode_message(
-                        MSG_TYPES.GAME_CAN_START_SRV, player_id, "")
+                        MSG_TYPES.GAME_CAN_START_SRV, player_id, self.calculate_msg_id(), "")
                     self.send_message(game_can_start_msg, player_id)
 
                 self.game_is_on = True
                     
         elif msg_type == MSG_TYPES.PLAYER_UPDATE_USR:
-            self.update_player_y_position(sender_id, msg_payload)
+            print(f"Recieved: {msg_id} from: {sender_id}")
+            self.update_player_model(sender_id, msg_id, msg_payload)
 
         else:
             print("Unknown message type: ", msg_type)
@@ -220,6 +229,8 @@ class Server():
                         "ball_pos": self.ball_pos,
                         "my_y_pos": self.y_positions[player_id],
                         "op_y_pos": self.y_positions[op_id],
+                        "my_y_pos_msg_id": self.latest_msg_ids[player_id],
+                        "op_y_pos_msg_id": self.latest_msg_ids[op_id],
                         "left_score": self.left_score,
                         "right_score": self.right_score,
                         "game_finished": (not self.game_is_on, self.winner)
@@ -227,8 +238,9 @@ class Server():
                     self.mutex.release()
                     # send message
                     update_msg = message_parsing.encode_message(
-                        MSG_TYPES.GAME_UPDATE_SRV, player_id, new_msg_payload)
-                   
+                        MSG_TYPES.GAME_UPDATE_SRV, player_id, self.calculate_msg_id(), new_msg_payload)
+
+                    print(f"Sending: {self.svr_msg_id} to: {player_id}")
                     self.send_message(update_msg, player_id)
            
                 time.sleep(1/self.refresh_rate)

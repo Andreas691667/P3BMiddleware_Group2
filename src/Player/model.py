@@ -10,10 +10,29 @@ class Model():
         self.op_y_pos: int = 0
         self.my_x_pos: str = ""
         self.op_x_pos: str = ""
+        self.my_latest_msg_id: int = -1
+        self.op_latest_msg_id: int = -1
         self.ball_pos: (int, int) = (0, 0)
         self.my_score: int = 0
         self.op_score: int = 0
 
+
+    def set_my_latest_msg_id (self, msg_id: int) -> None:
+        """Set my latest msg id"""
+        self.my_latest_msg_id = msg_id
+    
+    
+    def set_op_latest_msg_id (self, msg_id: int) -> None:
+        """Set opponent latest msg id"""
+        self.op_latest_msg_id = msg_id
+    
+    def get_my_latest_msg_id (self) -> int:
+        """Get my latest msg id"""
+        return self.my_latest_msg_id
+    
+    def get_op_latest_msg_id (self) -> int:
+        """Get opponent latest msg id"""
+        return self.op_latest_msg_id
 
     def paddle_collision(self, paddle_y_pos: int) -> bool:
         """Returns True if there is a collision with the paddle, False otherwise"""
