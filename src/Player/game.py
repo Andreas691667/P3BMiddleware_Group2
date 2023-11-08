@@ -35,8 +35,8 @@ class Game():
 
         # measurement
         self.message_count = 0
-        self.msg_data: list[tuple[int, int]] = [] # (msg_id, time_in_ns) 
-        self.key_stroke_log: list[(str, int)] = []
+        self.msg_data: list[tuple[int, int]] = [] # (msg_id, time_interval_in_ms) 
+        self.key_stroke_log: list[(str, int)] = [] # (key, time_in_ms)
 
         self.start_game()
 
