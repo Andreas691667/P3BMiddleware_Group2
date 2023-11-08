@@ -20,9 +20,9 @@ class Server():
         self.configure_outgoing_channel()
 
         # Model variables
-        self.x_positions: dict[int, str] = {}  # player_id : int => x_pos : str (LEFT or RIGHT)
-        self.y_positions: dict[int, int] = {}  # player_id : int => y_pos : int
-        self.latest_msg_ids: dict[int, int] = {} #player_id: int => msg_id : int
+        self.x_positions: dict[int, str] = {}    # player_id : int => x_pos : str (LEFT or RIGHT)
+        self.y_positions: dict[int, int] = {}    # player_id : int => y_pos : int
+        self.latest_msg_ids: dict[int, int] = {} # player_id : int => msg_id : int
         self.ball_pos: (int, int) = (0, 0)
         self.d_ball: (int, int) = (BALL_CONFIG.MAX_BALL_SPEED, BALL_CONFIG.MAX_BALL_SPEED)
         self.refresh_rate: int = 10

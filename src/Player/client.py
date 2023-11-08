@@ -23,6 +23,7 @@ class Client():
         self.consumer_thread = threading.Thread(target=self.start_consuming)
         self.consumer_thread.start()
 
+
     def create_channel(self):
         """Create and return a channel object"""
         # The connection object

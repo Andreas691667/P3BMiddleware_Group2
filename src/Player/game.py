@@ -30,7 +30,7 @@ class Game():
         self.game_finished : bool = False
         self.winner : str = ""
         self.stop_main_loop = Event()
-        self.msg_send_times : dict[int, int] = {}
+        self.msg_send_times : dict[int, int] = {} # msg_id => tid
         self.latest_send_msg_id: int = -1
 
         # measurement
@@ -40,17 +40,17 @@ class Game():
 
         self.start_game()
 
-    def add_msg_data (self, msg_id, time):
+    def add_msg_data (self, msg_id, time_stamp, transmission_time):
         """d"""
-        self.msg_data.append((msg_id, time))
+        self.msg_data.append((msg_id, time_stamp, transmission_time))
     
     def get_msg_data (self) -> list:
         """d"""
         return self.msg_data
     
-    def add_keystroke (self, key, time):
+    def add_keystroke (self, key, _time):
         """d"""
-        self.key_stroke_log.append((key, time))
+        self.key_stroke_log.append((key, _time))
     
     def get_key_strokes_data (self) -> list:
         """d"""
@@ -116,6 +116,7 @@ class Game():
         elif msg_type == MSG_TYPES.GAME_CAN_START_SRV:
             # start game
             print("Recieved start game")
+            print(f"You are: {self.game_model.get_my_x_pos()}")
             self.game_is_on = True
             self.game_view.clear_countdown()
             self.game_view.clear_player_position()
@@ -123,7 +124,6 @@ class Game():
 
         elif msg_type == MSG_TYPES.COUNTDOWN_SRV:
             print("Countdown: ", msg_payload)
-            print(f"You are: {self.game_model.get_my_x_pos()}")
             self.game_view.show_player_position(self.game_model.get_my_x_pos())
             self.game_view.show_countdown(msg_payload)
 
@@ -131,22 +131,21 @@ class Game():
             ball_pos = msg_payload["ball_pos"]
             op_y_pos = msg_payload["op_y_pos"]
             my_y_pos = msg_payload["my_y_pos"]
-            op_y_pos_msg_id = msg_payload["op_y_pos_msg_id"] 
-            my_y_pos_msg_id = msg_payload["my_y_pos_msg_id"] 
+            op_y_pos_msg_id = msg_payload["op_y_pos_msg_id"]
+            my_y_pos_msg_id = msg_payload["my_y_pos_msg_id"]
             left_score = msg_payload["left_score"]
             right_score = msg_payload["right_score"]
             game_finished = msg_payload["game_finished"]
 
             # Set message ID in model if it have changed
-            if (self.game_model.get_my_latest_msg_id() != my_y_pos_msg_id):
-                print(f"Recieved my msg: {my_y_pos_msg_id}")
+            if (self.game_model.get_my_latest_msg_id() != my_y_pos_msg_id and my_y_pos_msg_id != -1):
                 self.game_model.set_my_latest_msg_id(my_y_pos_msg_id)
                 # Calculate traversel time
-                time_traversed = (time.time_ns() - self.msg_send_times[my_y_pos_msg_id])/10**6
-                self.add_msg_data(my_y_pos_msg_id, time_traversed)
+                cur_time = time.time_ns()
+                time_traversed = (cur_time - self.msg_send_times[my_y_pos_msg_id])/10**6
+                self.add_msg_data(my_y_pos_msg_id, cur_time, time_traversed)
 
-            if (self.game_model.get_op_latest_msg_id() != op_y_pos_msg_id):
-                print(f"Recieved op msg: {op_y_pos_msg_id}")
+            if (self.game_model.get_op_latest_msg_id() != op_y_pos_msg_id and op_y_pos_msg_id != -1):
                 self.game_model.set_op_latest_msg_id(op_y_pos_msg_id)
 
 
@@ -167,9 +166,24 @@ class Game():
                 self.game_finished = True
                 self.winner = game_finished[1]
                 print("Game finished!", game_finished)
-                print(self.get_msg_data())
-                print([t for id, t in self.get_msg_data()])
-                
+                self.write_log_to_file()
+                # print(self.get_msg_data())
+                # print([t for id, t in self.get_msg_data()])
+
+    def write_log_to_file(self):
+        # TODO: vi skal have en log til player updates og en til keystrokes
+        # TODO: men virkede det at skrive i mappen? Prøver lige selv at kører det, 2 sek \thumbsup \nice lol
+        file = open(f"./log_files/transmission_times/{self.player_id}_pl_log.txt", "w")
+        # write content of msg_data
+        for msg_id, timestamp, transmission_time in self.get_msg_data():
+            file.write(f"{msg_id};{timestamp};{transmission_time} \n")
+        file.close() 
+
+        # der er en fejl i handle message efter restart
+        # satens
+        # time_traversed = (time.time_ns() - self.msg_send_times[my_y_pos_msg_id])/10**6
+        # keyerror -1 
+        
     def calculate_msg_id (self):
         """calculates message id"""
         self.message_count += 1
@@ -193,10 +207,10 @@ class Game():
                 dt = self.get_user_input()
 
                 # ---- UPDATE VIEW ----
-                self.game_view.update_view(self.game_model.get_my_y_pos(),
-                                        self.game_model.get_op_y_pos(),
-                                        self.game_model.get_ball_pos(),
-                                        self.game_model.get_my_x_pos(),
+                self.game_view.update_view( self.game_model.get_my_y_pos(),
+                                            self.game_model.get_op_y_pos(),
+                                            self.game_model.get_ball_pos(),
+                                            self.game_model.get_my_x_pos(),
                                             self.game_model.get_my_score(),
                                             self.game_model.get_op_score(),
                                             self.change_score
