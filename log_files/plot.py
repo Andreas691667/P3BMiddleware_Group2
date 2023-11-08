@@ -32,8 +32,10 @@ ts_times = [get_feature(line, "ts_time") for line in lines]
 # Shift timestamps
 tm_stamps_shiftet = [(tm_stamp-min(tm_stamps))/10**9 for tm_stamp in tm_stamps]
 
-shuffled_ts = shuffle(ts_times[0])
-
-plt.plot(shuffled_ts, 'o')
+# shuffle the data
+# shuffle(ts_times)
+mean = np.mean(ts_times)
+var = np.var(ts_times)
+plt.plot(ts_times, 'o')
 plt.show()
 
