@@ -178,11 +178,6 @@ class Game():
         for msg_id, timestamp, transmission_time in self.get_msg_data():
             file.write(f"{msg_id};{timestamp};{transmission_time} \n")
         file.close() 
-
-        # der er en fejl i handle message efter restart
-        # satens
-        # time_traversed = (time.time_ns() - self.msg_send_times[my_y_pos_msg_id])/10**6
-        # keyerror -1 
         
     def calculate_msg_id (self):
         """calculates message id"""

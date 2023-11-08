@@ -38,6 +38,8 @@ class Server():
         self.state_thread_stop_event = Event()
         self.mutex = Lock()
         
+        self.queue_sizes : list([int, int]) = [] # queue len and timestamp [ns]
+
         self.consumer_thread.start()
         self.state_thread.start()
 
@@ -59,8 +61,8 @@ class Server():
         
         # Declare the queue (Name is generated uniquely by RMQ)
         # Incoming message queue
-        result = self.incoming_channel.queue_declare(queue='', exclusive=True)
-        self.incoming_message_queue = result.method.queue
+        self.result = self.incoming_channel.queue_declare(queue='', exclusive=True)
+        self.incoming_message_queue = self.result.method.queue
 
         # Bind the queue to the exchange
         self.incoming_channel.queue_bind(
@@ -243,10 +245,18 @@ class Server():
                     print(f"Sending: {self.svr_msg_id} to: {player_id}")
                     self.send_message(update_msg, player_id)
            
+                # TODO: Calculate queue length
+                queue_len = self.result.method.message_count
+                self.queue_sizes.append((queue_len, time.time_ns()))
                 time.sleep(1/self.refresh_rate)
             
             if (self.winner != ""):
                 print("Game finished!")
+                file = open(f"./log_files/queue_size/queue_log.txt", "w")
+                # write content of msg_data
+                for queue_size, timestamp in self.queue_sizes:
+                    file.write(f"{queue_size};{timestamp} \n")
+                file.close() 
                 self.y_positions.clear()
                 self.x_positions.clear()
                 self.left_score = 0
