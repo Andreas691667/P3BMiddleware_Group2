@@ -149,7 +149,7 @@ class Server():
                 self.game_is_on = True
                     
         elif msg_type == MSG_TYPES.PLAYER_UPDATE_USR:
-            print(f"Recieved: {msg_id} from: {sender_id}")
+            # print(f"Recieved: {msg_id} from: {sender_id}")
             self.update_player_model(sender_id, msg_id, msg_payload)
 
         else:
@@ -161,7 +161,7 @@ class Server():
         method: The method object
         properties: The properties object
         body: The message body"""
-        print("Server received message: ", body)
+        # print("Server received message: ", body)
         self.handle_message(body)
 
     def start_consuming(self):
@@ -216,7 +216,7 @@ class Server():
                         self.winner = POS_TYPES.RIGHT
                         self.game_is_on = False
                     self.ball_pos = (0, 0)
-                    self.set_random_ball_speed()   
+                    self.set_random_ball_speed()
 
                 # send game update to both players
                 for player_id in self.x_positions:
@@ -245,24 +245,21 @@ class Server():
                     print(f"Sending: {self.svr_msg_id} to: {player_id}")
                     self.send_message(update_msg, player_id)
            
-                # TODO: Calculate queue length
-                queue_len = self.result.method.message_count
-                self.queue_sizes.append((queue_len, time.time_ns()))
+                # # TODO: Calculate queue length
+                # queue_len = self.result.method.message_count
+                # self.queue_sizes.append((queue_len, time.time_ns()))
                 time.sleep(1/self.refresh_rate)
             
             if (self.winner != ""):
                 print("Game finished!")
-                file = open(f"./log_files/queue_size/queue_log.txt", "w")
-                # write content of msg_data
-                for queue_size, timestamp in self.queue_sizes:
-                    file.write(f"{queue_size};{timestamp} \n")
-                file.close() 
+                # file = open(f"./log_files/queue_size/queue_log.txt", "w")
+                # # write content of msg_data
+                # for queue_size, timestamp in self.queue_sizes:
+                #     file.write(f"{queue_size};{timestamp} \n")
+                # file.close() 
                 self.y_positions.clear()
                 self.x_positions.clear()
                 self.left_score = 0
                 self.right_score = 0
                 self.ball_pos = (0, 0)
                 self.winner = ""
-
-
-    
