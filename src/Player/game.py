@@ -20,7 +20,7 @@ class Game():
         self.client = Client(self.on_message, self.player_id)
         self.game_view = View(key_up, key_down)
         self.game_model = Model()
-        self.incoming_message_queue = Queue(maxsize=3)
+        self.incoming_message_queue = Queue(maxsize=1)
         self.game_is_on: bool = False
         self.key_up : str = key_up
         self.key_down : str = key_down
@@ -264,9 +264,9 @@ class Game():
         """Returns KEY_DOWN, KEY_UP or NO_KEY""" 
         if (keyboard.is_pressed(self.key_up)):
             self.add_keystroke(self.key_up, time.time_ns()/10**6)
-            return 10
+            return 30
         elif (keyboard.is_pressed(self.key_down)):
             self.add_keystroke(self.key_down, time.time_ns()/10**6)
-            return -10
+            return -30
         else:
             return 0

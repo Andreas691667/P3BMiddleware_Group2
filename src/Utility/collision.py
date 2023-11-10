@@ -29,13 +29,15 @@ def determine_game_state(ball_pos: (int, int), left_pos: int, right_pos: int, d_
     else:
         return (BALL_STATE.NO_COLLISION, (0, 0))
 
-
+def paddle_wall_collision(paddle_y_pos: int) -> bool:
+        """Returns True if there is a collision with the paddle, False otherwise"""
+        return paddle_y_pos > SCREEN_CONFIG.SCREEN_HEIGHT/2-60 or paddle_y_pos < -SCREEN_CONFIG.SCREEN_HEIGHT/2+60
 
 def paddle_collision(ball_pos: (int, int), left_pos: int, right_pos: int) -> BALL_STATE:
     """Determine if the ball has collided with a paddle"""
     ball_x = ball_pos[0]
     ball_y = ball_pos[1]
-    MC = 40 # accronym, can you guess the meaning? :o
+    MC = 60 # accronym, can you guess the meaning? :o
     if (ball_x <= SCREEN_CONFIG.LEFT_X + PADDLE_CONFIG.PADDLE_WIDTH/2 + 3
         and ball_x >= SCREEN_CONFIG.LEFT_X - PADDLE_CONFIG.PADDLE_WIDTH/2 - 3):
         if (ball_y >= left_pos - PADDLE_CONFIG.PADDLE_HEIGHT/2 - MC

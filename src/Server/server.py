@@ -29,7 +29,7 @@ class Server():
         self.left_score: int = 0
         self.right_score: int = 0
         self.winner: str = ""
-        self.winning_score = 2
+        self.winning_score = 5
         self.svr_msg_id = 0
 
         self.consumer_thread = Thread(target=self.start_consuming)
@@ -110,7 +110,9 @@ class Server():
         """
         # Update position of player that sent message
         self.mutex.acquire()
-        self.y_positions[player_id] += new_y_pos
+        if not collision.paddle_wall_collision(new_y_pos):
+            self.y_positions[player_id] += new_y_pos
+
         self.latest_msg_ids[player_id] = msg_id
         self.mutex.release()
 
@@ -242,7 +244,7 @@ class Server():
                     update_msg = message_parsing.encode_message(
                         MSG_TYPES.GAME_UPDATE_SRV, player_id, self.calculate_msg_id(), new_msg_payload)
 
-                    print(f"Sending: {self.svr_msg_id} to: {player_id}")
+                    # print(f"Sending: {self.svr_msg_id} to: {player_id}")
                     self.send_message(update_msg, player_id)
            
                 # # TODO: Calculate queue length

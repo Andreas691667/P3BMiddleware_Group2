@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0, './src/Utility')
 from config import SCREEN_CONFIG
+from collision import paddle_wall_collision
 
 class Model():
     """Model class, include positions"""
@@ -33,14 +34,10 @@ class Model():
     def get_op_latest_msg_id (self) -> int:
         """Get opponent latest msg id"""
         return self.op_latest_msg_id
-
-    def paddle_collision(self, paddle_y_pos: int) -> bool:
-        """Returns True if there is a collision with the paddle, False otherwise"""
-        return paddle_y_pos > SCREEN_CONFIG.SCREEN_HEIGHT/2-6 or paddle_y_pos < -SCREEN_CONFIG.SCREEN_HEIGHT/2+6
-
+    
     def set_op_y_pos(self, new_y_pos: int) -> None:
         """d"""
-        if not self.paddle_collision(new_y_pos):
+        if not paddle_wall_collision(new_y_pos):
             self.op_y_pos = new_y_pos
 
     def set_ball_pos(self, pos) -> None:
@@ -53,7 +50,7 @@ class Model():
     
     def set_my_y_pos(self, y_pos: int) -> None:
         """d"""
-        if not self.paddle_collision(y_pos):
+        if not paddle_wall_collision(y_pos):
             self.my_y_pos = y_pos
 
     def get_op_y_pos(self):
