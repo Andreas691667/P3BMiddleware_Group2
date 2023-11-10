@@ -20,7 +20,7 @@ class Game():
         self.client = Client(self.on_message, self.player_id)
         self.game_view = View(key_up, key_down)
         self.game_model = Model()
-        self.incoming_message_queue = Queue()
+        self.incoming_message_queue = Queue(maxsize=3)
         self.game_is_on: bool = False
         self.key_up : str = key_up
         self.key_down : str = key_down
@@ -40,9 +40,9 @@ class Game():
 
         self.start_game()
 
-    def add_msg_data (self, msg_id, time_stamp, transmission_time):
+    def add_msg_data (self, msg_id, time_stamp, transmission_time, queue_size):
         """d"""
-        self.msg_data.append((msg_id, time_stamp, transmission_time))
+        self.msg_data.append((msg_id, time_stamp, transmission_time, queue_size))
     
     def get_msg_data (self) -> list:
         """d"""
@@ -143,7 +143,8 @@ class Game():
                 # Calculate traversel time
                 cur_time = time.time_ns()
                 time_traversed = (cur_time - self.msg_send_times[my_y_pos_msg_id])/10**6
-                self.add_msg_data(my_y_pos_msg_id, cur_time, time_traversed)
+                queue_size = self.incoming_message_queue.qsize()
+                self.add_msg_data(my_y_pos_msg_id, cur_time, time_traversed, queue_size)
 
             if (self.game_model.get_op_latest_msg_id() != op_y_pos_msg_id and op_y_pos_msg_id != -1):
                 self.game_model.set_op_latest_msg_id(op_y_pos_msg_id)
@@ -175,8 +176,8 @@ class Game():
         # TODO: men virkede det at skrive i mappen? Prøver lige selv at kører det, 2 sek \thumbsup \nice lol
         file = open(f"./log_files/transmission_times/{self.player_id}_pl_log.txt", "w")
         # write content of msg_data
-        for msg_id, timestamp, transmission_time in self.get_msg_data():
-            file.write(f"{msg_id};{timestamp};{transmission_time} \n")
+        for msg_id, timestamp, transmission_time, queue_size in self.get_msg_data():
+            file.write(f"{msg_id};{timestamp};{transmission_time};{queue_size} \n")
         file.close() 
         
     def calculate_msg_id (self):
