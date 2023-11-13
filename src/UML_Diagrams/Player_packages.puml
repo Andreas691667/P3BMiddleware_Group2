@@ -1,0 +1,16 @@
+@startuml packages
+set namespaceSeparator none
+package "Player" as Player {
+}
+package "Player.client" as Player.client {
+}
+package "Player.game" as Player.game {
+}
+package "Player.model" as Player.model {
+}
+package "Player.view" as Player.view {
+}
+Player.game --> Player.client
+Player.game --> Player.model
+Player.game --> Player.view
+@enduml

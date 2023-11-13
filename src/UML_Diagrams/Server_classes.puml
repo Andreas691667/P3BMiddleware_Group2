@@ -1,0 +1,53 @@
+@startuml classes
+set namespaceSeparator none
+class "Server" as Server.server.Server {
+  ball_pos : tuple
+  consumer_thread : Thread
+  d_ball : tuple
+  game_is_on : bool
+  incoming_channel : BlockingChannel
+  incoming_message_queue
+  latest_msg_ids : dict[int, int]
+  left_score : int
+  mutex : lock
+  outgoing_channel : BlockingChannel
+  queue_sizes : list
+  refresh_rate : int
+  result
+  right_score : int
+  state_thread : Thread
+  state_thread_stop_event : Event
+  svr_msg_id : int
+  winner : str
+  winning_score : int
+  x_positions : dict[int, str]
+  y_positions : dict[int, int]
+  __init__() -> None
+  assign_player_x_position(player_id)
+  calculate_ball_pos()
+  calculate_msg_id()
+  configure_incoming_channel()
+  configure_outgoing_channel()
+  create_channel()
+  get_y_from_x(x_pos)
+  handle_message(msg)
+  on_message(ch, method, properties, body)
+  send_message(message, player_id)
+  set_random_ball_speed()
+  start_consuming()
+  state_thread_fun()
+  update_player_model(player_id, msg_id, new_y_pos)
+}
+
+package "Utility.config" as Utility.config {
+}
+package "Utility.message_parsing" as Utility.message_parsing {
+}
+package "Utility.collision" as Utility.collision {
+}
+
+Server.server.Server --> Utility.config
+Server.server.Server --> Utility.message_parsing
+Server.server.Server --> Utility.collision
+
+@enduml

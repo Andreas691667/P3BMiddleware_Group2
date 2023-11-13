@@ -1,0 +1,129 @@
+@startuml classes
+set namespaceSeparator none
+class "Client" as Player.client.Client {
+  consumer_thread : Thread
+  incoming_channel : BlockingChannel
+  incoming_message_queue
+  outgoing_channel : BlockingChannel
+  __init__(on_message_clb, player_id) -> None
+  configure_incoming_channel(on_message_clb, player_id)
+  configure_outgoing_channel()
+  create_channel()
+  send_message(message)
+  start_consuming()
+}
+class "Game" as Player.game.Game {
+  change_score : bool
+  client
+  game_finished : bool
+  game_is_on : bool
+  game_model
+  game_view
+  incoming_message_queue : Queue
+  key_down : str
+  key_restart : str
+  key_stroke_log : list[str, int]
+  key_up : str
+  latest_send_msg_id : int
+  message_count : int
+  msg_data : list[tuple[int, int]]
+  msg_send_times : dict[int, int]
+  player_id
+  refresh_rate : int
+  stop_main_loop : Event
+  winner : str
+  __init__(key_up: str, key_down: str) -> None
+  add_keystroke(key, _time)
+  add_msg_data(msg_id, time_stamp, ...
+  ...transmission_time, queue_size)
+  calculate_msg_id()
+  get_key_strokes_data() -> list
+  get_msg_data() -> list
+  get_user_input() -> str
+  handle_message(msg)
+  initialize_game()
+  main_game_loop()
+  on_message(ch, method, properties, body)
+  set_player_id()
+  start_game()
+  stop_game()
+  write_log_to_file()
+}
+class "Model" as Player.model.Model {
+  ball_pos : tuple
+  my_latest_msg_id : int
+  my_score : int
+  my_x_pos : str
+  my_y_pos : int
+  op_latest_msg_id : int
+  op_score : int
+  op_x_pos : str
+  op_y_pos : int
+  __init__() -> None
+  get_ball_pos()
+  get_my_latest_msg_id() -> int
+  get_my_score() -> int
+  get_my_x_pos() -> str
+  get_my_y_pos()
+  get_op_latest_msg_id() -> int
+  get_op_score() -> int
+  get_op_x_pos() -> str
+  get_op_y_pos()
+  set_ball_pos(pos) -> None
+  set_my_latest_msg_id(msg_id: int) -> None
+  set_my_score(score: int) -> None
+  set_my_x_pos(x_pos: str)
+  set_my_y_pos(y_pos: int) -> None
+  set_op_latest_msg_id(msg_id: int) -> None
+  set_op_score(score: int) -> None
+  set_op_x_pos(x_pos: str)
+  set_op_y_pos(new_y_pos: int) -> None
+}
+class "View" as Player.view.View {
+  countdown : Turtle
+  hit_ball : Turtle
+  key_down
+  key_up
+  left_pad : Turtle
+  left_sc_board : Turtle
+  player_position : Turtle
+  right_pad : Turtle
+  right_sc_board : Turtle
+  sc
+  __init__(key_up, key_down) -> None
+  clear_countdown()
+  clear_player_position()
+  close_screen()
+  create_ball()
+  create_countdown()
+  create_paddle(color: str, x_pos: int)
+  create_paddles()
+  create_player_position()
+  create_scoreboard(color, x)
+  create_scoreboards()
+  create_screen()
+  reset_view()
+  set_player_colors()
+  show_countdown(countdown: int)
+  show_player_position(x_pos: str)
+  show_restart_msg()
+  show_winner(winner: str)
+  update_positions(my_x_pos, my_y, op_y, ball_pos)
+  update_score_boards(my_x_pos, my_score, op_score)
+  update_view(my_y: int, op_y: int, ball_pos: (int, int), ...
+  ... my_x_pos: str, my_score: int, op_score: int, update_score: bool)
+}
+
+package "Utility.config" as Utility.config {
+}
+package "Utility.message_parsing" as Utility.message_parsing {
+}
+
+Player.game.Game -> Utility.config
+Player.game.Game -> Utility.message_parsing
+Player.game.Game *--> Player.client.Client
+Player.game.Game *--> Player.model.Model
+Player.game.Game *--> Player.view.View
+
+
+@enduml
