@@ -242,10 +242,12 @@ class Game():
         # wait until key is pressed
         restart_game : bool = False
         while True:
+            # Restart game by pressing down
             if keyboard.is_pressed(self.key_down):
                 restart_game = True
                 break
             
+            # Exit game by pressing up
             elif keyboard.is_pressed(self.key_up):
                 print("Exiting game...")
                 self.stop_main_loop.set()
