@@ -15,7 +15,7 @@ def read_all_files_from_directory(directory_str):
             lines = lines.split("\n")
             lines = lines[:len(lines)-1]
             content += lines
-            split_indexes.append(len(content))
+            split_indexes.append(len(content)-1)
     return content, split_indexes
 
 
@@ -63,9 +63,26 @@ tm_stamps_shiftet = [(tm_stamp-min(tm_stamps))/10**9 for tm_stamp in tm_stamps]
 
 # shuffle the data
 # shuffle(ts_times)
-mean = np.mean(ts_times)
-var = np.var(ts_times)
-plt.plot(ts_times, 'o')
-plt.plot([0, len(ts_times)], [mean, mean], color="red")
-plt.show()
+# mean = np.mean(ts_times)
+# var = np.var(ts_times)
+# plt.plot(ts_times, 'o')
+# plt.plot([0, len(ts_times)], [mean, mean], color="red")
+# plt.show()
 
+index_0 = 0
+losses = []
+for index in split_indexes:
+    ids = msg_ids[index_0:index]
+    if len(ids) != 0:
+        id_0 = ids[0]
+        loss = 0
+        for id in ids:
+            if id_0 != id:
+                loss += 1
+            id_0 = id
+        losses.append(loss)
+        index_0 = index
+
+# plot the losses
+plt.plot(losses, 'o')
+plt.show()
