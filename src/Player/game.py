@@ -20,7 +20,7 @@ class Game():
         self.client = Client(self.on_message, self.player_id)
         self.game_view = View(key_up, key_down)
         self.game_model = Model()
-        self.incoming_message_queue = Queue(maxsize=1)
+        self.incoming_message_queue = Queue()
         self.game_is_on: bool = False
         self.key_up : str = key_up
         self.key_down : str = key_down
