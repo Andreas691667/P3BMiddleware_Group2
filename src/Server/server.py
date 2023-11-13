@@ -29,7 +29,7 @@ class Server():
         self.left_score: int = 0
         self.right_score: int = 0
         self.winner: str = ""
-        self.winning_score = 5
+        self.winning_score = 11
         self.svr_msg_id = 0
 
         self.consumer_thread = Thread(target=self.start_consuming)
