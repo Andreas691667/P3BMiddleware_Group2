@@ -6,6 +6,7 @@ from random import shuffle
 def read_all_files_from_directory(directory_str):
     directory = os.fsencode(directory_str)
     content = []
+    split_indexes = []
     for file in os.listdir(directory):
          filename = os.fsdecode(file)
          if filename.endswith(".txt"):
@@ -14,10 +15,11 @@ def read_all_files_from_directory(directory_str):
             lines = lines.split("\n")
             lines = lines[:len(lines)-1]
             content += lines
-    return content
+            split_indexes.append(len(content))
+    return content, split_indexes
 
 
-lines = read_all_files_from_directory("log_files/transmission_times/")
+lines, split_indexes = read_all_files_from_directory("log_files/transmission_times/")
 
 def get_feature(line, feature):
     feature_num = 0 if feature == "msg_id" else (1 if feature == "tm_stamp" else 2)
@@ -26,7 +28,7 @@ def get_feature(line, feature):
     return feature
 
 
-def plot_transmission_times_by_color ():
+def plot_transmission_times_by_color():
     msg_ids_1 = [get_feature(line, "msg_id") for line in lines][: split_indexes[0]]
     tm_stamps_1 = [get_feature(line, "tm_stamp") for line in lines][: split_indexes[0]]
     ts_times_1 = [get_feature(line, "ts_time") for line in lines][: split_indexes[0]]
