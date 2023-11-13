@@ -1,0 +1,47 @@
+@startuml classes
+set namespaceSeparator none
+class "BALL_CONFIG" as Utility.config.BALL_CONFIG {
+  BALL_RADIUS : float
+  MAX_BALL_SPEED : int
+}
+class "BALL_STATE" as Utility.config.BALL_STATE {
+  BORDER_COLLISION : str
+  LEFT_GOAL : str
+  NO_COLLISION : str
+  PADDLE_COLLISION : str
+  RIGHT_GOAL : str
+}
+class "MSG_TYPES" as Utility.config.MSG_TYPES {
+  COUNTDOWN_SRV : str
+  GAME_CAN_START_SRV : str
+  GAME_UPDATE_SRV : str
+  NEW_PLAYER_USR : str
+  PLAYER_POSITION_INIT_SRV : str
+  PLAYER_UPDATE_USR : str
+}
+class "PADDLE_CONFIG" as Utility.config.PADDLE_CONFIG {
+  PADDLE_HEIGHT : int
+  PADDLE_WIDTH : int
+}
+class "PLAYER_COLORS" as Utility.config.PLAYER_COLORS {
+  IDLE_COLOR : str
+  LEFT_PLAYER_COLOR : str
+  RIGHT_PLAYER_COLOR : str
+}
+class "POS_TYPES" as Utility.config.POS_TYPES {
+  LEFT : str
+  RIGHT : str
+}
+class "RMQ_CONFIG" as Utility.config.RMQ_CONFIG {
+  SERVER_EXCHANGE : str
+  SERVER_IP : str
+  SERVER_PORT : int
+  USER_EXCHANGE : str
+}
+class "SCREEN_CONFIG" as Utility.config.SCREEN_CONFIG {
+  LEFT_X : float
+  RIGHT_X : float
+  SCREEN_HEIGHT : int
+  SCREEN_WIDTH : int
+}
+@enduml

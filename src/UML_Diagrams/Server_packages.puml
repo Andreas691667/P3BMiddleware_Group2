@@ -1,0 +1,7 @@
+@startuml packages
+set namespaceSeparator none
+package "Server" as Server {
+}
+package "Server.server" as Server.server {
+}
+@enduml

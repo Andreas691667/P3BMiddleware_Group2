@@ -1,0 +1,12 @@
+@startuml packages
+set namespaceSeparator none
+package "Utility" as Utility {
+}
+package "Utility.collision" as Utility.collision {
+}
+package "Utility.config" as Utility.config {
+}
+package "Utility.message_parsing" as Utility.message_parsing {
+}
+Utility.collision --> Utility.config
+@enduml
