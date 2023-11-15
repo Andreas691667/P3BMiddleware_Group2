@@ -184,6 +184,24 @@ class Server():
         """ Randomize the speed of the ball """
         self.d_ball = (BALL_CONFIG.MAX_BALL_SPEED, random.randint(-BALL_CONFIG.MAX_BALL_SPEED, BALL_CONFIG.MAX_BALL_SPEED))
     
+    def increment_goals(self, ball_state):
+        # Increment goals
+        if (ball_state == BALL_STATE.LEFT_GOAL):
+            self.left_score += 1
+            if (self.left_score >= self.winning_score):
+                self.winner = POS_TYPES.LEFT
+                self.game_is_on = False
+            self.ball_pos = (0, 0)
+            self.set_random_ball_speed()
+
+        if (ball_state == BALL_STATE.RIGHT_GOAL):
+            self.right_score += 1
+            if (self.right_score >= self.winning_score):
+                self.winner = POS_TYPES.RIGHT
+                self.game_is_on = False
+            self.ball_pos = (0, 0)
+            self.set_random_ball_speed()
+
     def state_thread_fun(self):
         """State thread"""
         # Get message
@@ -201,22 +219,8 @@ class Server():
                     self.d_ball = payload
                     # self.calculate_ball_pos() #not here, since players should see event
 
-                # Increment goals
-                if (ball_state == BALL_STATE.LEFT_GOAL):
-                    self.left_score += 1
-                    if (self.left_score >= self.winning_score):
-                        self.winner = POS_TYPES.LEFT
-                        self.game_is_on = False
-                    self.ball_pos = (0, 0)
-                    self.set_random_ball_speed()
-
-                if (ball_state == BALL_STATE.RIGHT_GOAL):
-                    self.right_score += 1
-                    if (self.right_score >= self.winning_score):
-                        self.winner = POS_TYPES.RIGHT
-                        self.game_is_on = False
-                    self.ball_pos = (0, 0)
-                    self.set_random_ball_speed()
+                # Check for goal
+                self.increment_goals(ball_state)
 
                 # send game update to both players
                 for player_id in self.x_positions:
