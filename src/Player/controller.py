@@ -12,7 +12,7 @@ from threading import Event
 import random
 import time
 
-class Game():
+class Controller():
     """Class for the game
     The game is responsible for running the game loop and updating the player's position"""
     def __init__(self, key_up : str, key_down : str) -> None:

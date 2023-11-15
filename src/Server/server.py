@@ -45,13 +45,12 @@ class Server():
 
 
     def create_channel(self):
-        """Configure the server"""
+        """Return a channel object"""
         # The connection object
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=RMQ_CONFIG.SERVER_IP, port=RMQ_CONFIG.SERVER_PORT))
         # The channel object
         channel = connection.channel()
-
         return channel
 
     def configure_incoming_channel(self):
@@ -59,10 +58,9 @@ class Server():
         self.incoming_channel.exchange_declare(
             exchange=RMQ_CONFIG.USER_EXCHANGE, exchange_type='fanout')  # for incomming messages
         
-        # Declare the queue (Name is generated uniquely by RMQ)
         # Incoming message queue
-        self.result = self.incoming_channel.queue_declare(queue='', exclusive=True)
-        self.incoming_message_queue = self.result.method.queue
+        result = self.incoming_channel.queue_declare(queue='', exclusive=True)
+        self.incoming_message_queue = result.method.queue
 
         # Bind the queue to the exchange
         self.incoming_channel.queue_bind(
@@ -75,7 +73,7 @@ class Server():
     def configure_outgoing_channel(self):
         """Configure the outgoing channel"""
         self.outgoing_channel.exchange_declare(
-            exchange=RMQ_CONFIG.SERVER_EXCHANGE, exchange_type='direct')  # for incoming messages
+            exchange=RMQ_CONFIG.SERVER_EXCHANGE, exchange_type='direct')  # for outgoing messages
 
     def send_message(self, message, player_id):
         """Send message to the rabbitmq server
@@ -223,7 +221,6 @@ class Server():
                 # send game update to both players
                 for player_id in self.x_positions:
                     # Construct new message
-                    # TODO: Include points(goal)
                     # Get opposite id of the one we send message to
                     ids = list(self.x_positions.keys())
                     op_id = ids[1] if ids[0] == player_id else ids[0]
@@ -247,18 +244,10 @@ class Server():
                     # print(f"Sending: {self.svr_msg_id} to: {player_id}")
                     self.send_message(update_msg, player_id)
            
-                # # TODO: Calculate queue length
-                # queue_len = self.result.method.message_count
-                # self.queue_sizes.append((queue_len, time.time_ns()))
                 time.sleep(1/self.refresh_rate)
             
             if (self.winner != ""):
                 print("Game finished!")
-                # file = open(f"./log_files/queue_size/queue_log.txt", "w")
-                # # write content of msg_data
-                # for queue_size, timestamp in self.queue_sizes:
-                #     file.write(f"{queue_size};{timestamp} \n")
-                # file.close() 
                 self.y_positions.clear()
                 self.x_positions.clear()
                 self.left_score = 0

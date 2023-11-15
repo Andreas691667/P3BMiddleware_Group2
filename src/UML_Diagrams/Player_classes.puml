@@ -12,7 +12,7 @@ class "Client" as Player.client.Client {
   send_message(message)
   start_consuming()
 }
-class "Game" as Player.game.Game {
+class "Controller" as Player.controller.Controller {
   change_score : bool
   client
   game_finished : bool
@@ -119,11 +119,11 @@ package "Utility.config" as Utility.config {
 package "Utility.message_parsing" as Utility.message_parsing {
 }
 
-Player.game.Game -> Utility.config
-Player.game.Game -> Utility.message_parsing
-Player.game.Game *--> Player.client.Client
-Player.game.Game *--> Player.model.Model
-Player.game.Game *--> Player.view.View
+Player.controller.Controller -> Utility.config
+Player.controller.Controller -> Utility.message_parsing
+Player.controller.Controller *--> Player.client.Client
+Player.controller.Controller *--> Player.model.Model
+Player.controller.Controller *--> Player.view.View
 
 
 @enduml

@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0, './')
-from src.Player.game import Game
+from src.Player.controller import Controller
 
 if __name__ == "__main__":
 
@@ -8,5 +8,5 @@ if __name__ == "__main__":
     down = sys.argv[2]
     # up = 'q'
     # down = 'a'
-    game = Game(up, down)
+    game = Controller(up, down)
    
