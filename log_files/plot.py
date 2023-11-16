@@ -61,7 +61,45 @@ ts_times = [get_feature(line, "ts_time") for line in lines]
 # Shift timestamps
 tm_stamps_shiftet = [(tm_stamp-min(tm_stamps))/10**9 for tm_stamp in tm_stamps]
 
-# shuffle the data
+ts_times_sorted = sorted(ts_times)
+
+# get 75% of the data
+a = 0.75
+ts_times_a = ts_times_sorted[:int(len(ts_times_sorted)*a)]
+
+# shuffle data again
+shuffle(ts_times_a)
+
+
+plt.subplot(2, 2, 2)
+plt.boxplot(ts_times, vert=False, meanline=True)
+plt.xlabel("Transmission time in ms")
+plt.ylabel("")
+
+plt.subplot(2, 2, 4)
+# show the 75% of the data up close
+shuffle(ts_times)
+plt.plot(ts_times, 'o')
+plt.xlabel("Message number")
+plt.ylabel("Transmission time in ms")
+plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
+# draw box around the 75% of the data
+plt.plot([0, len(ts_times)], [min(ts_times_a), min(ts_times_a)], color="red")
+plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="red")
+
+
+plt.subplot(1, 2, 1)
+plt.plot(ts_times, 'o')
+plt.xlabel("Message number")
+plt.ylabel("Transmission time in ms")
+# draw box around the 75% of the data
+plt.plot([0, len(ts_times)], [min(ts_times_a), min(ts_times_a)], color="red")
+plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="red")
+
+
+
+plt.show()
+# # shuffle the data
 # shuffle(ts_times)
 # mean = np.mean(ts_times)
 # var = np.var(ts_times)
@@ -84,5 +122,5 @@ for index in split_indexes:
         index_0 = index
 
 # plot the losses
-plt.plot(losses, 'o')
-plt.show()
+# plt.plot(losses, 'o')
+# plt.show()
