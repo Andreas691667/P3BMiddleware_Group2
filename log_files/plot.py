@@ -72,7 +72,7 @@ shuffle(ts_times_a)
 
 
 plt.subplot(2, 2, 2)
-plt.boxplot(ts_times, vert=False, meanline=True)
+plt.boxplot(ts_times_a, vert=False, meanline=True)
 plt.xlabel("Transmission time in ms")
 plt.ylabel("")
 
@@ -84,9 +84,10 @@ plt.xlabel("Message number")
 plt.ylabel("Transmission time in ms")
 plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
 # draw box around the 75% of the data
-plt.plot([0, len(ts_times)], [min(ts_times_a), min(ts_times_a)], color="red")
-plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="red")
-
+plt.plot([0, len(ts_times)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
+plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
+# place legens bottom right
+plt.legend(loc='lower right')
 
 plt.subplot(1, 2, 1)
 plt.plot(ts_times, 'o')
@@ -98,6 +99,8 @@ plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="red")
 
 
 
+
+plt.legend()
 plt.show()
 # # shuffle the data
 # shuffle(ts_times)
