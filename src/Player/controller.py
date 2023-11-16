@@ -198,10 +198,6 @@ class Controller():
                     msg = self.incoming_message_queue.get()
                     self.handle_message(msg)
 
-                # ---- UPDATE MY PADDLE ----
-                # Get user input
-                dt = self.get_user_input()
-
                 # ---- UPDATE VIEW ----
                 self.game_view.update_view( self.game_model.get_my_y_pos(),
                                             self.game_model.get_op_y_pos(),
@@ -211,6 +207,11 @@ class Controller():
                                             self.game_model.get_op_score(),
                                             self.change_score
                                         )
+                
+                # ---- UPDATE MY PADDLE ----
+                # Get user input
+                dt = self.get_user_input()
+
                 # Reset change score flag
                 self.change_score = False
 
