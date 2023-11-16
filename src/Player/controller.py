@@ -207,11 +207,6 @@ class Controller():
                                             self.game_model.get_op_score(),
                                             self.change_score
                                         )
-                
-                # ---- UPDATE MY PADDLE ----
-                # Get user input
-                dt = self.get_user_input()
-
                 # Reset change score flag
                 self.change_score = False
 
@@ -220,6 +215,10 @@ class Controller():
                     self.game_view.show_winner(self.winner)
                     self.game_is_on = False
                     break
+
+                # ---- UPDATE MY PADDLE ----
+                # Get user input
+                dt = self.get_user_input()
 
                 if dt != 0:
                     # ---- PUBLISH USER UPDATE ----
