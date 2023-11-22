@@ -1,3 +1,1 @@
-
-    # plt.plot(split_indexes, losses, 'o')
-    # plt.show()
+message_loss

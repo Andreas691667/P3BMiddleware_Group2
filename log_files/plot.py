@@ -61,7 +61,7 @@ ts_times = [get_feature(line, "ts_time") for line in lines]
 # Shift timestamps
 tm_stamps_shiftet = [(tm_stamp-min(tm_stamps))/10**9 for tm_stamp in tm_stamps]
 
-def trans_time_plot(ts_times, split_indexes,a=0.75):
+def trans_time_plot(ts_times, split_indexes,a=0.50):
     ts_times_sorted = sorted(ts_times)
     # get 75% of the data
     ts_times_a = ts_times_sorted[:int(len(ts_times_sorted)*a)]
@@ -145,7 +145,8 @@ def message_loss(msg_ids, split_indexes):
 
 
 # plot the transmission times
-# trans_time_plot(ts_times, split_indexes)
+trans_time_plot(ts_times, split_indexes)
 
 # plot the message loss
 message_loss(msg_ids, split_indexes)
+

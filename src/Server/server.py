@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0, './src/Utility')
 from threading import Thread, Event, Lock
+from queue import Queue, Empty
 import pika
 import message_parsing
 from config import RMQ_CONFIG, MSG_TYPES, POS_TYPES, BALL_STATE, BALL_CONFIG
@@ -22,14 +23,14 @@ class Server():
         # Model variables
         self.x_positions: dict[int, str] = {}    # player_id : int => x_pos : str (LEFT or RIGHT)
         self.y_positions: dict[int, int] = {}    # player_id : int => y_pos : int
-        self.latest_msg_ids: dict[int, int] = {} # player_id : int => msg_id : int
+        self.latest_msg_ids: dict[int, Queue] = {} # player_id : int => msg_id_i... remember to remove ids
         self.ball_pos: (int, int) = (0, 0)
         self.d_ball: (int, int) = (BALL_CONFIG.MAX_BALL_SPEED, BALL_CONFIG.MAX_BALL_SPEED)
         self.refresh_rate: int = 10
         self.left_score: int = 0
         self.right_score: int = 0
         self.winner: str = ""
-        self.winning_score = 11
+        self.winning_score = 3
         self.svr_msg_id = 0
 
         self.consumer_thread = Thread(target=self.start_consuming)
@@ -95,7 +96,7 @@ class Server():
         # if two players have joined, initialize y-pos and msg_ids and the game can start (return true)
         if len(self.x_positions) == 2:
             self.y_positions = {player_id: 0 for player_id in self.x_positions}
-            self.latest_msg_ids = {player_id: -1 for player_id in self.x_positions}
+            self.latest_msg_ids = {player_id: Queue() for player_id in self.x_positions}
             return True
         else:
             return False
@@ -110,9 +111,9 @@ class Server():
         self.mutex.acquire()
         if not collision.paddle_wall_collision(new_y_pos):
             self.y_positions[player_id] += new_y_pos
-
-        self.latest_msg_ids[player_id] = msg_id
         self.mutex.release()
+        
+        self.latest_msg_ids[player_id].put(msg_id)
 
     def calculate_msg_id (self):
         """calculate msg id for server"""
@@ -202,6 +203,19 @@ class Server():
             self.ball_pos = (0, 0)
             self.set_random_ball_speed()
 
+    def get_msg_ids(self, player_id, op_id) -> (int, int):
+        """ Get the latest message ids from the players """
+        if not self.latest_msg_ids[player_id].empty():
+            player_msg_id = self.latest_msg_ids[player_id].get(block=False)
+        else:
+            player_msg_id = -1
+
+        if not self.latest_msg_ids[op_id].empty():
+            op_msg_id = self.latest_msg_ids[op_id].get(block=False)
+        else:
+            op_msg_id = -1
+        return player_msg_id, op_msg_id
+
     def state_thread_fun(self):
         """State thread"""
         # Get message
@@ -221,21 +235,22 @@ class Server():
 
                 # Check for goal
                 self.increment_goals(ball_state)
-
+                player_msg_id, op_msg_id = self.get_msg_ids(player_id, op_id)
+                
                 # send game update to both players
                 for player_id in self.x_positions:
                     # Construct new message
                     # Get opposite id of the one we send message to
                     ids = list(self.x_positions.keys())
-                    op_id = ids[1] if ids[0] == player_id else ids[0]
-
+                    op_id = ids[1] if ids[0] == player_id else ids[0]                 
                     self.mutex.acquire(blocking=False)
+
                     new_msg_payload = {
                         "ball_pos": self.ball_pos,
                         "my_y_pos": self.y_positions[player_id],
                         "op_y_pos": self.y_positions[op_id],
-                        "my_y_pos_msg_id": self.latest_msg_ids[player_id],
-                        "op_y_pos_msg_id": self.latest_msg_ids[op_id],
+                        "my_y_pos_msg_id": player_msg_id,
+                        "op_y_pos_msg_id": op_msg_id,
                         "left_score": self.left_score,
                         "right_score": self.right_score,
                         "game_finished": (not self.game_is_on, self.winner)
@@ -245,7 +260,6 @@ class Server():
                     update_msg = message_parsing.encode_message(
                         MSG_TYPES.GAME_UPDATE_SRV, player_id, self.calculate_msg_id(), new_msg_payload)
 
-                    # print(f"Sending: {self.svr_msg_id} to: {player_id}")
                     self.send_message(update_msg, player_id)
            
                 time.sleep(1/self.refresh_rate)
