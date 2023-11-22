@@ -137,17 +137,25 @@ class Controller():
             right_score = msg_payload["right_score"]
             game_finished = msg_payload["game_finished"]
 
-            # Set message ID in model if it have changed
-            if (self.game_model.get_my_latest_msg_id() != my_y_pos_msg_id and my_y_pos_msg_id != -1):
-                self.game_model.set_my_latest_msg_id(my_y_pos_msg_id)
-                # Calculate traversel time
-                cur_time = time.time_ns()
-                time_traversed = (cur_time - self.msg_send_times[my_y_pos_msg_id])/10**6
-                queue_size = self.incoming_message_queue.qsize()
-                self.add_msg_data(my_y_pos_msg_id, cur_time, time_traversed, queue_size)
+            
+            # Find message send time and figure out if it have been logged
+            if (not self.msg_was_logged(my_y_pos_msg_id) and my_y_pos_msg_id != -1):
+                self.log_msg(my_y_pos_msg_id)
 
-            if (self.game_model.get_op_latest_msg_id() != op_y_pos_msg_id and op_y_pos_msg_id != -1):
-                self.game_model.set_op_latest_msg_id(op_y_pos_msg_id)
+            # Set message ID in model if it have changed
+            # If the latest send msg id is not equal to the incomming my_y_pos_msg_id? 
+            # Then ta
+            # if (self.game_model.get_my_latest_msg_id() != my_y_pos_msg_id and my_y_pos_msg_id != -1):
+
+            #     self.game_model.set_my_latest_msg_id(my_y_pos_msg_id)
+            #     # Calculate traversel time
+            #     cur_time = time.time_ns()
+            #     time_traversed = (cur_time - self.msg_send_times[my_y_pos_msg_id])/10**6
+            #     queue_size = self.incoming_message_queue.qsize()
+            #     self.add_msg_data(my_y_pos_msg_id, cur_time, time_traversed, queue_size)
+
+            # if (self.game_model.get_op_latest_msg_id() != op_y_pos_msg_id and op_y_pos_msg_id != -1):
+            #     self.game_model.set_op_latest_msg_id(op_y_pos_msg_id)
 
 
             my_score = left_score if self.game_model.my_x_pos == POS_TYPES.LEFT else right_score
@@ -170,6 +178,27 @@ class Controller():
                 self.write_log_to_file()
                 # print(self.get_msg_data())
                 # print([t for id, t in self.get_msg_data()])
+
+    def msg_was_logged(self, msg_id: int) -> bool:
+        # Find msg_id in msg_data: list[tuple[int, int]] -> (msg_id, time_interval_in_ms) 
+        logged_msg_ids = [t[0] for t in self.msg_data]
+
+        # Check if msg_id is in list
+        try:
+            logged_msg_ids.index(msg_id) # Try to find index. Raise exception if not found, go to else if found
+        except:
+            return False # Exception -> not found
+        else:
+            return True # Found
+
+    def log_msg(self, msg_id: int) -> None:
+        """Log message to message log"""
+        self.game_model.set_my_latest_msg_id(msg_id)
+        # Calculate traversel time
+        cur_time = time.time_ns()
+        time_traversed = (cur_time - self.msg_send_times[msg_id])/10**6
+        queue_size = self.incoming_message_queue.qsize()
+        self.add_msg_data(msg_id, cur_time, time_traversed, queue_size)
 
     def write_log_to_file(self):
         # TODO: vi skal have en log til player updates og en til keystrokes

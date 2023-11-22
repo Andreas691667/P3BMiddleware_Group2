@@ -125,5 +125,5 @@ for index in split_indexes:
         index_0 = index
 
 # plot the losses
-# plt.plot(losses, 'o')
-# plt.show()
+plt.plot(losses, 'o')
+plt.show()
