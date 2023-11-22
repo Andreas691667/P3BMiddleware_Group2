@@ -69,31 +69,33 @@ def trans_time_plot(ts_times, split_indexes,a=0.50):
     # shuffle data again
     shuffle(ts_times_a)
 
-    plt.subplot(2, 2, 2)
-    plt.boxplot(ts_times_a, vert=False, meanline=True)
-    plt.xlabel("Transmission time in ms")
-    plt.ylabel("")
+    plt.subplot(1, 2, 2)
+    plt.boxplot(ts_times, vert=True, meanline=True)
+    plt.title("Boxplot of all transmission times")
+    plt.ylabel("Transmission time in ms")
+    plt.xlabel("")
 
-    plt.subplot(2, 2, 4)
+    # plt.subplot(2, 2, 4)
     ts_times_shuffle = ts_times
     shuffle(ts_times_shuffle)
-    plt.plot(ts_times_shuffle, 'o')
-    plt.xlabel("Message number")
-    plt.ylabel("Transmission time in ms")
-    plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
-    # draw box around the 75% of the data
-    plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
-    plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
-    # place legens bottom right
-    plt.legend(loc='lower right')
+    # plt.plot(ts_times_shuffle, 'o')
+    # plt.xlabel("Message number")
+    # plt.ylabel("Transmission time in ms")
+    # plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
+    # # draw box around the 75% of the data
+    # plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
+    # plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
+    # # place legens bottom right
+    # plt.legend(loc='lower right')
 
     plt.subplot(1, 2, 1)
     plt.plot(ts_times_shuffle, 'o')
     plt.xlabel("Message number")
     plt.ylabel("Transmission time in ms")
+    plt.title("Transmission times scatter plot")
     # draw box around the 75% of the data
-    plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red")
-    plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="red")
+    # plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red")
+    # plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="red")
 
     # plot split indexes as vertical lines
     # for index in split_indexes:
