@@ -106,16 +106,18 @@ def message_loss(msg_ids, split_indexes):
     index_0 = 0
     losses = []
     for index in split_indexes:
-        ids = msg_ids[index_0:index]
+        ids = msg_ids[index_0:index+1]
         if len(ids) != 0:
             id_0 = ids[0]
+            last_digit = id_0 % 10
+            id_0 = id_0 // 10
             loss = 0
             for id in ids:
-                if id_0 != id:
+                if int(str(id_0)+str(last_digit)) != id:
                     loss += 1
-                id_0 += 1
+                last_digit += 1
             losses.append(loss)
-            index_0 = index
+            index_0 = index+1
 
     # plot the losses in a bar chart
     plt.bar(range(len(losses)), losses)
@@ -123,7 +125,6 @@ def message_loss(msg_ids, split_indexes):
     plt.ylabel("Message loss")
 
     # calculate mean weighted by the number of messages
-
     no_msg = []
     for i, ind in enumerate(split_indexes):
         no_msg.append(ind - (0 if i == 0 else split_indexes[i-1]))
