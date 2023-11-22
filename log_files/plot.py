@@ -61,69 +61,91 @@ ts_times = [get_feature(line, "ts_time") for line in lines]
 # Shift timestamps
 tm_stamps_shiftet = [(tm_stamp-min(tm_stamps))/10**9 for tm_stamp in tm_stamps]
 
-ts_times_sorted = sorted(ts_times)
+def trans_time_plot(ts_times, split_indexes,a=0.75):
+    ts_times_sorted = sorted(ts_times)
+    # get 75% of the data
+    ts_times_a = ts_times_sorted[:int(len(ts_times_sorted)*a)]
 
-# get 75% of the data
-a = 0.75
-ts_times_a = ts_times_sorted[:int(len(ts_times_sorted)*a)]
+    # shuffle data again
+    shuffle(ts_times_a)
 
-# shuffle data again
-shuffle(ts_times_a)
+    plt.subplot(2, 2, 2)
+    plt.boxplot(ts_times_a, vert=False, meanline=True)
+    plt.xlabel("Transmission time in ms")
+    plt.ylabel("")
 
+    plt.subplot(2, 2, 4)
+    ts_times_shuffle = ts_times
+    shuffle(ts_times_shuffle)
+    plt.plot(ts_times_shuffle, 'o')
+    plt.xlabel("Message number")
+    plt.ylabel("Transmission time in ms")
+    plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
+    # draw box around the 75% of the data
+    plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
+    plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
+    # place legens bottom right
+    plt.legend(loc='lower right')
 
-plt.subplot(2, 2, 2)
-plt.boxplot(ts_times_a, vert=False, meanline=True)
-plt.xlabel("Transmission time in ms")
-plt.ylabel("")
+    plt.subplot(1, 2, 1)
+    plt.plot(ts_times_shuffle, 'o')
+    plt.xlabel("Message number")
+    plt.ylabel("Transmission time in ms")
+    # draw box around the 75% of the data
+    plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red")
+    plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="red")
 
-plt.subplot(2, 2, 4)
-# show the 75% of the data up close
-shuffle(ts_times)
-plt.plot(ts_times, 'o')
-plt.xlabel("Message number")
-plt.ylabel("Transmission time in ms")
-plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
-# draw box around the 75% of the data
-plt.plot([0, len(ts_times)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
-plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
-# place legens bottom right
-plt.legend(loc='lower right')
-
-plt.subplot(1, 2, 1)
-plt.plot(ts_times, 'o')
-plt.xlabel("Message number")
-plt.ylabel("Transmission time in ms")
-# draw box around the 75% of the data
-plt.plot([0, len(ts_times)], [min(ts_times_a), min(ts_times_a)], color="red")
-plt.plot([0, len(ts_times)], [max(ts_times_a), max(ts_times_a)], color="red")
-
+    # plot split indexes as vertical lines
+    # for index in split_indexes:
+    #     plt.axvline(x=index, color="green")
 
 
+    plt.show()
 
-plt.legend()
-plt.show()
-# # shuffle the data
-# shuffle(ts_times)
-# mean = np.mean(ts_times)
-# var = np.var(ts_times)
-# plt.plot(ts_times, 'o')
-# plt.plot([0, len(ts_times)], [mean, mean], color="red")
-# plt.show()
+def message_loss(msg_ids, split_indexes):
+    index_0 = 0
+    losses = []
+    for index in split_indexes:
+        ids = msg_ids[index_0:index]
+        if len(ids) != 0:
+            id_0 = ids[0]
+            loss = 0
+            for id in ids:
+                if id_0 != id:
+                    loss += 1
+                id_0 += 1
+            losses.append(loss)
+            index_0 = index
 
-index_0 = 0
-losses = []
-for index in split_indexes:
-    ids = msg_ids[index_0:index]
-    if len(ids) != 0:
-        id_0 = ids[0]
-        loss = 0
-        for id in ids:
-            if id_0 != id:
-                loss += 1
-            id_0 = id
-        losses.append(loss)
-        index_0 = index
+    # plot the losses in a bar chart
+    plt.bar(range(len(losses)), losses)
+    plt.xlabel("Game number")
+    plt.ylabel("Message loss")
 
-# plot the losses
-plt.plot(losses, 'o')
-plt.show()
+    # calculate mean weighted by the number of messages
+
+    no_msg = []
+    for i, ind in enumerate(split_indexes):
+        no_msg.append(ind - (0 if i == 0 else split_indexes[i-1]))
+
+    weighted_loss_sum = 0
+    for i, loss in enumerate(losses):
+        weighted_loss_sum += loss*no_msg[i]
+    weighted_loss_mean = weighted_loss_sum/sum(no_msg)
+
+    # add mean line
+    plt.axhline(y=weighted_loss_mean, color="red", label=f'Weighted mean: {weighted_loss_mean}')
+    plt.legend(loc='upper right')
+    # add non-weighted mean
+    plt.axhline(y=sum(losses)/sum(no_msg), color="green", label=f'Mean: {sum(losses)/sum(no_msg)}')
+    plt.legend(loc='upper right')
+
+
+    plt.show()
+
+
+# plot the transmission times
+# trans_time_plot(ts_times, split_indexes)
+
+# plot the message loss
+message_loss(msg_ids, split_indexes)
