@@ -93,6 +93,10 @@ def trans_time_plot(ts_times, split_indexes,a=0.50):
     plt.xlabel("Message number")
     plt.ylabel("Transmission time in ms")
     plt.title("Transmission times scatter plot")
+
+    # add mean line
+    plt.axhline(y=np.mean(ts_times_shuffle), color="red", label=f'mean: {np.mean(ts_times_shuffle)}')
+
     # draw box around the 75% of the data
     # plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red")
     # plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="red")
@@ -101,7 +105,7 @@ def trans_time_plot(ts_times, split_indexes,a=0.50):
     # for index in split_indexes:
     #     plt.axvline(x=index, color="green")
 
-
+    plt.legend(loc='upper right')
     plt.show()
 
 def message_loss(msg_ids, split_indexes):
@@ -151,5 +155,5 @@ def message_loss(msg_ids, split_indexes):
 trans_time_plot(ts_times, split_indexes)
 
 # plot the message loss
-message_loss(msg_ids, split_indexes)
+# message_loss(msg_ids, split_indexes)
 
