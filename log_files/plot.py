@@ -69,53 +69,61 @@ def trans_time_plot(ts_times, split_indexes,a=0.50):
     # shuffle data again
     shuffle(ts_times_a)
 
-    plt.subplot(2, 2, 2)
-    plt.boxplot(ts_times_a, vert=False, meanline=True)
-    plt.xlabel("Transmission time in ms")
-    plt.ylabel("")
+    plt.subplot(1, 2, 2)
+    plt.boxplot(ts_times, vert=True, meanline=True)
+    plt.title("Boxplot of all transmission times")
+    plt.ylabel("Transmission time in ms")
+    plt.xlabel("")
 
-    plt.subplot(2, 2, 4)
+    # plt.subplot(2, 2, 4)
     ts_times_shuffle = ts_times
     shuffle(ts_times_shuffle)
-    plt.plot(ts_times_shuffle, 'o')
-    plt.xlabel("Message number")
-    plt.ylabel("Transmission time in ms")
-    plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
-    # draw box around the 75% of the data
-    plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
-    plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
-    # place legens bottom right
-    plt.legend(loc='lower right')
+    # plt.plot(ts_times_shuffle, 'o')
+    # plt.xlabel("Message number")
+    # plt.ylabel("Transmission time in ms")
+    # plt.ylim(min(ts_times_a)-10, max(ts_times_a)+10)
+    # # draw box around the 75% of the data
+    # plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red", label=f'min: {min(ts_times_a)}')
+    # plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="green", label=f'max: {max(ts_times_a)}')
+    # # place legens bottom right
+    # plt.legend(loc='lower right')
 
     plt.subplot(1, 2, 1)
     plt.plot(ts_times_shuffle, 'o')
     plt.xlabel("Message number")
     plt.ylabel("Transmission time in ms")
+    plt.title("Transmission times scatter plot")
+
+    # add mean line
+    plt.axhline(y=np.mean(ts_times_shuffle), color="red", label=f'mean: {np.mean(ts_times_shuffle)}')
+
     # draw box around the 75% of the data
-    plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red")
-    plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="red")
+    # plt.plot([0, len(ts_times_shuffle)], [min(ts_times_a), min(ts_times_a)], color="red")
+    # plt.plot([0, len(ts_times_shuffle)], [max(ts_times_a), max(ts_times_a)], color="red")
 
     # plot split indexes as vertical lines
     # for index in split_indexes:
     #     plt.axvline(x=index, color="green")
 
-
+    plt.legend(loc='upper right')
     plt.show()
 
 def message_loss(msg_ids, split_indexes):
     index_0 = 0
     losses = []
     for index in split_indexes:
-        ids = msg_ids[index_0:index]
+        ids = msg_ids[index_0:index+1]
         if len(ids) != 0:
             id_0 = ids[0]
+            last_digit = id_0 % 10
+            id_0 = id_0 // 10
             loss = 0
             for id in ids:
-                if id_0 != id:
+                if int(str(id_0)+str(last_digit)) != id:
                     loss += 1
-                id_0 += 1
+                last_digit += 1
             losses.append(loss)
-            index_0 = index
+            index_0 = index+1
 
     # plot the losses in a bar chart
     plt.bar(range(len(losses)), losses)
@@ -123,7 +131,6 @@ def message_loss(msg_ids, split_indexes):
     plt.ylabel("Message loss")
 
     # calculate mean weighted by the number of messages
-
     no_msg = []
     for i, ind in enumerate(split_indexes):
         no_msg.append(ind - (0 if i == 0 else split_indexes[i-1]))
@@ -148,5 +155,5 @@ def message_loss(msg_ids, split_indexes):
 trans_time_plot(ts_times, split_indexes)
 
 # plot the message loss
-message_loss(msg_ids, split_indexes)
+# message_loss(msg_ids, split_indexes)
 
