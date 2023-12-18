@@ -39,7 +39,7 @@ class Server:
         self.left_score: int = 0
         self.right_score: int = 0
         self.winner: str = ""
-        self.winning_score = 3
+        self.winning_score = 11
         self.svr_msg_id = 0
 
         self.consumer_thread = Thread(target=self.start_consuming)
@@ -72,7 +72,7 @@ class Server:
         )  # for incomming messages
 
         # Incoming message queue
-        result = self.incoming_channel.queue_declare(queue="", exclusive=True)
+        result = self.incoming_channel.queue_declare(queue="server", exclusive=True)
         self.incoming_message_queue = result.method.queue
 
         # Bind the queue to the exchange
